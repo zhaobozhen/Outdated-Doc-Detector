@@ -1,0 +1,109 @@
+@import '../../components/tokens.css';
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--od-bg);
+  color: var(--od-text);
+  font-family: var(--od-font);
+}
+
+.options-shell { min-height: 100vh; }
+
+.options-header {
+  align-items: center;
+  background: var(--od-surface);
+  border-bottom: 1px solid var(--od-border);
+  display: flex;
+  height: 80px;
+}
+
+.options-brand,
+.options-main {
+  margin-inline: auto;
+  max-width: 640px;
+  width: calc(100% - 48px);
+}
+
+.options-brand {
+  align-items: center;
+  display: flex;
+  font-size: 19px;
+  font-weight: 720;
+  gap: 12px;
+}
+
+.options-brand svg { color: var(--od-current); }
+
+.options-main { padding-block: 72px; }
+.options-main > h1 { font-size: 42px; letter-spacing: -0.04em; line-height: 1.1; margin: 0; }
+.options-intro { color: var(--od-text-muted); font-size: 17px; line-height: 1.6; margin: 16px 0 40px; }
+
+.setting-row,
+.privacy-section {
+  border-top: 1px solid var(--od-border);
+  padding-block: 30px;
+}
+
+.setting-row {
+  align-items: center;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 1fr auto;
+}
+
+.options-main h2 { font-size: 19px; margin: 0 0 8px; }
+.options-main section p { color: var(--od-text-muted); font-size: 15px; line-height: 1.65; margin: 0; }
+
+.switch {
+  background: var(--od-text-muted);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  height: 32px;
+  padding: 3px;
+  transition: background 160ms ease;
+  width: 54px;
+}
+
+.switch span {
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 24%);
+  display: block;
+  height: 26px;
+  transform: translateX(0);
+  transition: transform 160ms ease;
+  width: 26px;
+}
+
+.switch[data-checked='true'] { background: var(--od-current); }
+.switch[data-checked='true'] span { transform: translateX(22px); }
+.switch:disabled { cursor: wait; opacity: 0.55; }
+
+.privacy-section { border-bottom: 1px solid var(--od-border); }
+
+.save-status {
+  align-items: center;
+  color: var(--od-text-muted);
+  display: flex;
+  font-size: 14px;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.save-check { color: var(--od-current); font-size: 18px; }
+
+@media (max-width: 560px) {
+  .options-brand,
+  .options-main { width: calc(100% - 32px); }
+  .options-header { height: 68px; }
+  .options-main { padding-block: 48px; }
+  .options-main > h1 { font-size: 34px; }
+  .setting-row { align-items: start; gap: 20px; }
+}

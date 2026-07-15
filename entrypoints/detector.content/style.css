@@ -1,0 +1,96 @@
+@import '../../components/tokens.css';
+
+.outdated-docs-host {
+  color: var(--od-text);
+  font-family: var(--od-font);
+  position: fixed;
+  right: 16px;
+  top: 16px;
+  width: 320px;
+  z-index: 2147483647;
+}
+
+.page-notice {
+  --notice-color: var(--od-behind);
+  background: var(--od-surface);
+  border: 1px solid var(--od-border);
+  border-radius: var(--od-radius);
+  box-shadow: var(--od-shadow);
+  display: grid;
+  gap: 8px 12px;
+  grid-template-columns: 44px 1fr 32px;
+  padding: 16px;
+}
+
+.page-notice[data-state='outdated'] { --notice-color: var(--od-outdated); }
+
+.page-notice__icon {
+  align-items: center;
+  background: var(--od-surface-subtle);
+  border: 1px solid var(--od-border);
+  border-radius: 9px;
+  color: var(--notice-color);
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.page-notice__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.page-notice__copy strong {
+  color: var(--notice-color);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.page-notice__copy span { font-size: 13px; line-height: 1.45; }
+.page-notice__copy small { color: var(--od-text-muted); font-size: 11px; margin-top: 2px; }
+
+.page-notice__close {
+  align-items: center;
+  align-self: start;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: var(--od-text-muted);
+  cursor: pointer;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  padding: 0;
+  width: 30px;
+}
+
+.page-notice__close:hover { background: var(--od-surface-subtle); color: var(--od-text); }
+
+.page-notice__action {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--od-border);
+  color: var(--od-accent);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 680;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: 2px;
+  padding: 10px 0 0;
+}
+
+.page-notice__action:hover { color: var(--od-accent-hover); }
+
+@media (max-width: 360px) {
+  .outdated-docs-host {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    width: auto;
+  }
+}
