@@ -1,53 +1,125 @@
 # Outdated Docs
 
-Outdated Docs is a bilingual Chrome extension that compares the published date of a localized developer document with its English original. It reports timestamp lag without claiming that the page content is necessarily different.
+Outdated Docs is a bilingual Chrome extension that compares the last-updated
+date of a localized developer document with its English original. It reports
+timestamp lag without claiming that the page content is necessarily different.
 
 Outdated Docs 是一款默认支持中英双语的 Chrome 扩展。它对比开发者文档译文与英文原版的更新时间，只报告时间差，不推断内容或翻译质量。
 
-![Popup design](docs/design/popup-concept.png)
+![Clearly outdated Popup state](e2e/extension.spec.ts-snapshots/popup-outdated-darwin.png)
 
-## Supported documentation
+## Product Shape
 
-- MDN Web Docs
-- Android Developers
-- Google for Developers
-- Firebase
-- TensorFlow
-- Android Open Source Project
-- Google Cloud, including `cloud.google.com` and `docs.cloud.google.com`
+- The content script reads the current document and renders an optional,
+  isolated in-page notice.
+- The Manifest V3 service worker fetches the declared English original across
+  origins and owns per-tab result state and toolbar status.
+- The Popup shows the comparison, opens the English original, and can trigger a
+  new check.
+- The Options page controls whether the in-page notice is shown.
+- The first release targets Chrome Manifest V3. It has no account, backend,
+  analytics, telemetry, or remotely hosted executable code.
 
-MDN and Google DevSite markup are isolated behind separate adapters in `lib/analyzers`. A missing English link, missing date, invalid date, or failed request produces an “Unable to determine” or retryable error state; it never produces a stale warning.
+See [AGENTS.md](AGENTS.md) for coding-agent guidance, module boundaries, and
+validation rules.
 
-## Freshness states
+## Supported Documentation
 
-- Up to 30 minutes behind: up to date
-- More than 30 minutes but less than 45 days behind: slightly behind
-- At least 45 days behind: clearly outdated
-- A localized page newer than English: up to date
-- Unreliable input or network failure: unable to determine
+| Documentation | Hosts | Adapter |
+| --- | --- | --- |
+| MDN Web Docs | `developer.mozilla.org` | `MdnAdapter` |
+| Android Developers | `developer.android.com` | `GoogleDevsiteAdapter` |
+| Google for Developers | `developers.google.com` | `GoogleDevsiteAdapter` |
+| Firebase | `firebase.google.com` | `GoogleDevsiteAdapter` |
+| TensorFlow | `www.tensorflow.org` | `GoogleDevsiteAdapter` |
+| Android Open Source Project | `source.android.com` | `GoogleDevsiteAdapter` |
+| Google Cloud | `cloud.google.com`, `docs.cloud.google.com` | `GoogleDevsiteAdapter` |
+
+MDN and Google DevSite markup are isolated behind separate adapters in
+`lib/analyzers/`. A missing English link, missing date, invalid date, or failed
+request produces an unable-to-determine or retryable error state. It never
+produces an outdated warning from unreliable input.
+
+## Freshness States
+
+| Comparison | Result |
+| --- | --- |
+| Translation is no more than 30 minutes behind | Up to date |
+| Translation is over 30 minutes but under 45 days behind | Slightly behind |
+| Translation is at least 45 days behind | Clearly outdated |
+| Translation is newer than the English original | Up to date |
+| Date, English link, or network response is unreliable | Unable to determine |
 
 ## Architecture
 
-The content script selects a site adapter and parses the current DOM. The Manifest V3 service worker fetches only the detected HTTPS English URL, validates both the requested and final host against the configured adapter list, and returns HTML plus `Last-Modified`. The content script parses the English response and publishes a serializable result used by the toolbar icon, Popup, and isolated Shadow DOM notice.
+```text
+Current document DOM
+  -> content script
+  -> site adapter
+  -> localized page metadata
 
-The only synchronized setting is `showPageNotice`, which defaults to `true`. Per-tab analysis results use `chrome.storage.session`, are bound to the exact document URL, and are cleared on navigation or when the tab closes.
+English original URL
+  -> Manifest V3 service worker
+  -> validated HTTPS request
+  -> content script parses returned HTML
+  -> normalized analysis result
+     -> toolbar icon
+     -> Popup
+     -> Shadow DOM page notice
 
-## Development
+Options
+  -> chrome.storage.sync
+  -> showPageNotice
+```
+
+The service worker validates the requested URL and final redirected URL against
+the originating adapter family before returning HTML and `Last-Modified`.
+Requests omit credentials. The content script remains responsible for parsing
+both documents, so site-specific selectors stay inside the adapter layer.
+
+The only synchronized setting is `showPageNotice`, which defaults to `true`.
+Per-tab results use `chrome.storage.session`, are bound to the exact document
+URL, and are cleared on navigation or when the tab closes.
+
+## Quick Start
 
 Requirements:
 
 - Node.js 20.12 or newer
-- npm
+- npm and the committed lockfile
 - Chrome or Playwright Chromium for extension testing
+
+Install dependencies and start WXT development mode:
 
 ```sh
 npm install
 npm run dev
 ```
 
-Build and load `.output/chrome-mv3` from `chrome://extensions` using “Load unpacked”. Press `Alt+Shift+E` to open the Popup.
+For a production build, run:
 
-Run the full local gate:
+```sh
+npm run build
+```
+
+Then open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
+and select `.output/chrome-mv3`. Press `Alt+Shift+E` to open the Popup.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start WXT development mode. |
+| `npm run lint` | Run Oxlint with warnings denied. |
+| `npm run typecheck` | Run TypeScript without emitting files. |
+| `npm test` | Run Vitest unit and fixture tests once. |
+| `npm run test:watch` | Run Vitest in watch mode. |
+| `npm run build` | Build the production Chrome MV3 extension. |
+| `npm run test:e2e` | Build in test mode and run the real MV3 Playwright suite. |
+| `npm run test:e2e:update` | Intentionally replace all accepted visual snapshots. |
+| `npm run zip` | Build and create the Chrome Web Store ZIP under `.output/`. |
+
+Run the complete release gate from the repository root:
 
 ```sh
 npm run lint
@@ -58,14 +130,62 @@ npm run test:e2e
 npm run zip
 ```
 
-Playwright launches the complete WXT/Chromium parent process with a persistent context so the MV3 service worker, Popup, Options page, content script, and Shadow Root run as a real extension. Use `npm run test:e2e:update` only when intentionally accepting visual changes.
+Playwright launches a persistent Chromium context with the built extension. The
+suite exercises the MV3 service worker, Popup, Options page, content script,
+Shadow Root, keyboard focus, SPA navigation, narrow layout, and light and dark
+themes. Use `npm run test:e2e:update` only after visually reviewing an intended
+UI change, then run `npm run test:e2e` again against the new baseline.
 
-## Permissions and privacy
+## Localization
 
-The extension requests `storage` and host access only for the documentation sites listed above. It contains no analytics, account system, remote code, backend, or telemetry. See [PRIVACY.md](PRIVACY.md).
+Chrome locale catalogs live in `public/_locales/`:
+
+- `public/_locales/en/messages.json` is the default catalog.
+- `public/_locales/zh_CN/messages.json` is the Simplified Chinese catalog.
+- `lib/i18n.ts` owns the typed message-key boundary and date formatting.
+
+Keep keys aligned across both catalogs and preserve placeholders such as `$1`.
+After adding or renaming locale keys, run `npm run prepare`, then typecheck and
+test the affected UI.
+
+## Permissions And Privacy
+
+The production manifest requests only:
+
+- `storage`, for the page-notice preference and per-tab session results.
+- Host access for the documentation domains listed above.
+
+The extension does not request a broad browsing-history permission. It fetches
+only a supported page's declared English original. See [PRIVACY.md](PRIVACY.md)
+for the user-facing privacy statement.
+
+## Project Layout
+
+```text
+entrypoints/
+  background.ts             MV3 service worker, fetch proxy, result state
+  detector.content/         Adapter orchestration and Shadow DOM notice
+  popup/                    Toolbar Popup React entrypoint
+  options/                  Settings React entrypoint
+lib/
+  analyzers/                Site registry, adapters, and DOM parsers
+  analysis/                 Result model, comparison rules, and cache guard
+  storage/                  Synced settings access
+components/                 Shared icons, notice UI, and CSS tokens
+public/_locales/             Chrome i18n catalogs
+public/icons/                Toolbar and store icon assets
+tests/fixtures/              Stable documentation DOM fixtures
+e2e/                        MV3 Playwright tests and visual baselines
+docs/design/                Generated design references
+```
 
 ## Scope
 
-This first release targets Chrome Manifest V3. It does not perform semantic comparison, translation-quality scoring, custom user-defined site rules, cloud sync, or cross-browser store packaging.
+This release does not perform semantic comparison, translation-quality scoring,
+custom user-defined site rules, cloud sync, or cross-browser store packaging.
+If a documentation site stops exposing a reliable comparable date, that site
+must return unable to determine instead of falling back to response time or a
+guessed value.
 
-The public license and Chrome Web Store publisher details remain release-stage decisions.
+The public license and Chrome Web Store publisher details remain release-stage
+decisions.
