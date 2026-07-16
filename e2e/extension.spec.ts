@@ -302,6 +302,67 @@ test('in-page notice stays centered on a narrow page', async () => {
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
   }));
+  if (pageWidth.scrollWidth > pageWidth.clientWidth) {
+    const diagnostics = await page.evaluate(() => {
+      const viewportWidth = innerWidth;
+      const snapshot = (element: Element | null) => {
+        if (!element) return null;
+        const bounds = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const htmlElement = element instanceof HTMLElement ? element : null;
+        return {
+          className: element.getAttribute('class'),
+          clientWidth: htmlElement?.clientWidth ?? null,
+          id: element.id,
+          offsetLeft: htmlElement?.offsetLeft ?? null,
+          offsetWidth: htmlElement?.offsetWidth ?? null,
+          rect: {
+            left: bounds.left,
+            overflowRight: Math.max(0, bounds.right - viewportWidth),
+            right: bounds.right,
+            width: bounds.width,
+          },
+          scrollWidth: htmlElement?.scrollWidth ?? null,
+          style: {
+            contain: style.contain,
+            display: style.display,
+            insetInlineEnd: style.insetInlineEnd,
+            insetInlineStart: style.insetInlineStart,
+            marginInlineEnd: style.marginInlineEnd,
+            marginInlineStart: style.marginInlineStart,
+            maxWidth: style.maxWidth,
+            minWidth: style.minWidth,
+            overflowX: style.overflowX,
+            position: style.position,
+            transform: style.transform,
+            width: style.width,
+          },
+          tagName: element.tagName,
+        };
+      };
+      const shadowHost = document.querySelector('outdated-docs-notice');
+      const shadow = shadowHost?.shadowRoot;
+      const shadowElements = shadow ? [...shadow.querySelectorAll('*')].map(snapshot) : [];
+      return {
+        body: snapshot(document.body),
+        bodyChildren: [...document.body.children].map(snapshot),
+        documentElement: snapshot(document.documentElement),
+        media: {
+          max480: matchMedia('(max-width: 480px)').matches,
+          max680: matchMedia('(max-width: 680px)').matches,
+          reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        },
+        shadowElements,
+        shadowHost: snapshot(shadowHost),
+        viewport: {
+          devicePixelRatio,
+          innerWidth: viewportWidth,
+          visualViewportWidth: visualViewport?.width ?? null,
+        },
+      };
+    });
+    console.log(`NARROW_OVERFLOW_DIAGNOSTICS ${JSON.stringify(diagnostics)}`);
+  }
   expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth);
   await expect(notice).toHaveScreenshot('page-notice-diff-narrow.png');
   await page.close();
