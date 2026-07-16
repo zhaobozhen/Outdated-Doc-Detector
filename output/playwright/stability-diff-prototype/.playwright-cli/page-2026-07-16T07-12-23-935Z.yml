@@ -1,0 +1,85 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ◢
+      - text: Android Developers
+    - generic [ref=e5]:
+      - generic [ref=e6]: Essentials
+      - generic [ref=e7]: Design & Plan
+      - generic [ref=e8]: Develop
+      - generic [ref=e9]: Google Play
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - strong [ref=e12]: Jetpack Compose
+      - generic [ref=e13]: 概览
+      - generic [ref=e14]: 采用 Compose
+      - generic [ref=e15]: 界面
+      - generic [ref=e16]: 架构
+      - generic [ref=e17]: 性能
+      - generic [ref=e18]: 工具
+      - generic [ref=e19]: 测试
+    - main [ref=e20]:
+      - generic [ref=e21]: Develop > UI > Compose > Performance
+      - heading "Compose 中的稳定性" [level=1] [ref=e22]
+      - paragraph [ref=e23]: 稳定性可以让 Compose 运行时在重组期间跳过不必要的工作。本页介绍不可变对象、稳定类型以及调试稳定性的方法。
+      - heading "不可变对象" [level=2] [ref=e24]
+      - heading "在 Compose 中实现" [level=2] [ref=e28]
+  - complementary "Outdated Docs" [ref=e31]:
+    - generic [ref=e32]:
+      - generic [ref=e39]:
+        - generic [ref=e40]: Outdated Docs
+        - generic [ref=e41]: 严重过时
+        - generic [ref=e42]: 译文落后 173 天，但未检测到可验证的正文差异。
+      - button "关闭" [ref=e43] [cursor=pointer]: ×
+    - generic "更新时间对比" [ref=e44]:
+      - generic [ref=e45]:
+        - generic [ref=e46]: 当前译文
+        - strong [ref=e47]: 2025-07-26
+      - generic [ref=e48]:
+        - text: 173 天
+        - generic [ref=e49]: →
+      - generic [ref=e50]:
+        - generic [ref=e51]: 英文原版
+        - strong [ref=e52]: 2026-01-16
+    - generic [ref=e53]:
+      - button "Diff" [active] [ref=e54] [cursor=pointer]
+      - button "打开英文原版 ›" [ref=e57] [cursor=pointer]
+    - region "文档差异解析" [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]: 真实解析结果
+        - generic [ref=e61]: "0"
+        - paragraph [ref=e62]: 条高置信可验证差异
+        - generic [ref=e63]:
+          - generic [ref=e64]: 章节
+          - strong [ref=e65]: 9 / 9
+        - generic [ref=e66]:
+          - generic [ref=e67]: 代码块
+          - strong [ref=e68]: 3 / 3
+        - generic [ref=e69]:
+          - generic [ref=e70]: API 标识符
+          - strong [ref=e71]: 19 / 19
+        - generic [ref=e72]:
+          - generic [ref=e73]: 规范化链接
+          - strong [ref=e74]: 6 / 6
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - generic [ref=e77]: ✓
+          - strong [ref=e78]: 结构、代码与链接完全对齐
+          - generic [ref=e79]: 高置信
+        - paragraph [ref=e80]: 中英文页面使用相同章节锚点；全部代码块、API 标识符与目标链接一致，因此没有可展示的增删项。
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - generic [ref=e83]: 不可变对象
+            - strong [ref=e84]: Immutable objects
+          - generic [ref=e85]:
+            - generic [ref=e86]: 可变对象
+            - strong [ref=e87]: Mutable objects
+          - generic [ref=e88]:
+            - generic [ref=e89]: 在 Compose 中实现
+            - strong [ref=e90]: Implementation
+          - generic [ref=e91]:
+            - generic [ref=e92]: 解决稳定性问题
+            - strong [ref=e93]: Fix stability
+        - generic [ref=e94]:
+          - generic [ref=e95]: ⓘ
+          - generic [ref=e96]: 未比较中英文自然语言段落。日期滞后仍可能来自文字修订；这里仅说明没有发现可可靠验证的结构或代码差异。

@@ -149,7 +149,8 @@ and select `.output/chrome-mv3`. Press `Alt+Shift+E` to open the Popup.
 | `npm test` | Run Vitest unit and fixture tests once. |
 | `npm run test:watch` | Run Vitest in watch mode. |
 | `npm run build` | Build the production Chrome MV3 extension. |
-| `npm run test:e2e` | Build in test mode and run the real MV3 Playwright suite. |
+| `npm run test:e2e` | Build in test mode and run the real MV3 Playwright suite headlessly, without platform-sensitive snapshot assertions. |
+| `npm run test:e2e:visual` | Run the real MV3 suite headed with the accepted visual snapshot assertions. |
 | `npm run test:e2e:update` | Intentionally replace all accepted visual snapshots. |
 | `npm run zip` | Build and create the Chrome Web Store ZIP under `.output/`. |
 
@@ -167,8 +168,12 @@ npm run zip
 Playwright launches a persistent Chromium context with the built extension. The
 suite exercises the MV3 service worker, Popup, Options page, content script,
 Shadow Root, keyboard focus, SPA navigation, narrow layout, and light and dark
-themes. Use `npm run test:e2e:update` only after visually reviewing an intended
-UI change, then run `npm run test:e2e` again against the new baseline.
+themes. `npm run test:e2e` runs headlessly by default so local validation stays
+in the background; it keeps the functional and interaction assertions but skips
+platform-sensitive screenshot comparisons. Use `npm run test:e2e:visual` for
+the full headed visual suite. Use `npm run test:e2e:update` only after visually
+reviewing an intended UI change, then run `npm run test:e2e:visual` again against
+the new baseline.
 
 ## Continuous Integration And Nightly Releases
 

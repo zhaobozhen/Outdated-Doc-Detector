@@ -57,7 +57,8 @@ and recurring pitfalls only.
 | Typecheck | `npm run typecheck` |
 | Unit and fixture tests | `npm test` |
 | Production build | `npm run build` |
-| Real MV3 browser tests | `npm run test:e2e` |
+| Background MV3 browser tests | `npm run test:e2e` |
+| Headed MV3 visual tests | `npm run test:e2e:visual` |
 | Replace visual baselines | `npm run test:e2e:update` |
 | Chrome Web Store ZIP | `npm run zip` |
 
@@ -169,12 +170,18 @@ surface changes.
   `docs/design/` and the latest implementation screenshot in the same QA pass.
 - Use `.github/workflows/update-visual-baselines.yml` after intentionally
   accepting a visual change. It regenerates candidates and verifies them with a
-  normal E2E pass before upload. Inspect its macOS 26 artifact before replacing
-  tracked snapshots, then require the normal CI workflow to pass after commit.
+  headed visual E2E pass before upload. Inspect its macOS 26 artifact before
+  replacing tracked snapshots, then require the normal CI workflow to pass after
+  commit.
 - `npm run test:e2e:update` is suitable for local preview, but locally generated
   Darwin snapshots are not canonical when the host OS differs from the CI image.
 - Browser GUI validation must launch the entire Playwright/WXT parent process
   outside the sandbox. Do not start only a child Chromium process outside it.
+- Real MV3 Playwright tests use bundled Chromium's new headless mode by default
+  and skip platform-sensitive screenshot assertions. Keep the manually launched
+  persistent context bound to Playwright's configured `headless` value. Use
+  `npm run test:e2e:visual` for explicit headed snapshot validation; CI and
+  Nightly must retain that visual gate.
 - Release preparation requires the full README gate followed by `npm run zip`.
 - If the default npm cache is not writable in a sandbox, use
   `/private/tmp/outdated-doc-detector-npm-cache`. Do not rewrite the lockfile to

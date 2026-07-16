@@ -61,11 +61,11 @@ async function installPreviewRoutes(browserContext: BrowserContext): Promise<voi
   );
 }
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ headless }) => {
   const extensionPath = await createChineseTestExtension();
   context = await chromium.launchPersistentContext('', {
     channel: 'chromium',
-    headless: false,
+    headless,
     locale: 'zh-CN',
     colorScheme: 'light',
     args: [

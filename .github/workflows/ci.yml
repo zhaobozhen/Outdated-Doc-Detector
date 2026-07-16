@@ -53,7 +53,7 @@ jobs:
         run: npm run build
 
       - name: Run real MV3 browser tests
-        run: npm run test:e2e
+        run: npm run test:e2e:visual
 
       - name: Upload Playwright failure artifacts
         if: failure()
