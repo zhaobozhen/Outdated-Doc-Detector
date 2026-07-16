@@ -237,6 +237,7 @@
   display: grid;
   grid-column: 1 / -1;
   grid-template-rows: 0fr;
+  min-width: 0;
   opacity: 0;
   transform: translateY(-6px);
   transition:
@@ -256,7 +257,9 @@
 }
 
 .page-notice__diff-clip {
+  max-width: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 

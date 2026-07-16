@@ -267,6 +267,7 @@ test('in-page Diff renders verified code and API evidence', async () => {
 test('in-page notice stays centered on a narrow page', async () => {
   const page = await context.newPage();
   await page.setViewportSize({ width: 375, height: 700 });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(
     'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale&outdated-docs-diff=stability&narrow=1',
   );
