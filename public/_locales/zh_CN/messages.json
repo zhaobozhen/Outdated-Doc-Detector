@@ -33,7 +33,7 @@
   "optionsTitle": { "message": "设置" },
   "optionsDescription": { "message": "选择检测结果的显示方式。" },
   "showPageNotice": { "message": "显示页内提醒" },
-  "showPageNoticeHelp": { "message": "当译文更新时间落后时，在页面右上角显示提醒。" },
+  "showPageNoticeHelp": { "message": "当译文更新时间落后时，在页面顶部居中显示提醒。" },
   "privacyTitle": { "message": "隐私" },
   "privacyCopy": { "message": "检测仅访问当前文档及其英文原版。扩展不收集、上传或共享浏览数据。" },
   "autoSaved": { "message": "设置会自动保存" },

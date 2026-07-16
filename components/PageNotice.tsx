@@ -1,13 +1,14 @@
-import { ChevronRight, X } from 'lucide-react';
+import { ArrowRight, ChevronRight, X } from 'lucide-react';
 
 import { FreshnessIcon } from './FreshnessIcon';
 import {
+  lagDurationText,
   freshnessStatusText,
   freshnessSummaryText,
   type WarningKind,
 } from '../lib/analysis/presentation';
 import type { ComparedResult } from '../lib/analysis/types';
-import { message } from '../lib/i18n';
+import { formatDate, message } from '../lib/i18n';
 
 interface PageNoticeProps {
   result: ComparedResult & { kind: WarningKind };
@@ -34,10 +35,30 @@ export function PageNotice({ result, onClose, onOpenEnglish }: PageNoticeProps) 
       >
         <X aria-hidden="true" size={18} strokeWidth={1.9} />
       </button>
-      <button className="page-notice__action" onClick={onOpenEnglish} type="button">
-        {message('openEnglish')}
-        <ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
-      </button>
+      <div
+        aria-label={message('timestampComparison')}
+        className="page-notice__comparison"
+        role="group"
+      >
+        <div className="page-notice__date">
+          <span>{message('localizedVersion')}</span>
+          <time dateTime={result.localizedAt}>{formatDate(result.localizedAt)}</time>
+        </div>
+        <div className="page-notice__lag" aria-hidden="true">
+          <span>{lagDurationText(result.lagDays)}</span>
+          <ArrowRight size={15} strokeWidth={1.8} />
+        </div>
+        <div className="page-notice__date page-notice__date--end">
+          <span>{message('englishOriginal')}</span>
+          <time dateTime={result.englishAt}>{formatDate(result.englishAt)}</time>
+        </div>
+      </div>
+      <div className="page-notice__footer">
+        <button className="page-notice__action" onClick={onOpenEnglish} type="button">
+          {message('openEnglish')}
+          <ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
+        </button>
+      </div>
     </aside>
   );
 }

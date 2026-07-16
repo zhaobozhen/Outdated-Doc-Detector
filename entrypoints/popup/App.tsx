@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ArrowRight,
   CircleCheck,
   ExternalLink,
   RefreshCw,
@@ -137,7 +138,9 @@ export default function App() {
     <main className="popup-shell" data-state={result.kind}>
       <header className="popup-header">
         <div className="brand">
-          <FreshnessIcon size={28} strokeWidth={1.8} />
+          <span aria-hidden="true" className="brand-mark">
+            <FreshnessIcon size={24} strokeWidth={1.8} />
+          </span>
           <span>Outdated Docs</span>
         </div>
         <button
@@ -152,10 +155,10 @@ export default function App() {
       </header>
 
       <section aria-live="polite" className="status-block">
-        <div className="status-icon">
-          <FreshnessIcon size={52} state={visualState} strokeWidth={1.8} />
+        <div aria-hidden="true" className="status-icon">
+          <FreshnessIcon size={34} state={visualState} strokeWidth={1.9} />
         </div>
-        <div>
+        <div className="status-copy">
           <h1>{statusText(result)}</h1>
           <p>{summaryText(result)}</p>
         </div>
@@ -163,18 +166,21 @@ export default function App() {
 
       {isCompared(result) && (
         <section aria-label={message('timestampComparison')} className="timeline">
-          <div className="date-column">
-            <span>{message('localizedVersion')}</span>
-            <strong>{formatDate(result.localizedAt)}</strong>
+          <div className="timeline-header">
+            <span>{message('timestampComparison')}</span>
+            <strong>{lagDurationText(result.lagDays)}</strong>
           </div>
-          <div className="lag-marker">
-            {lagDurationText(result.lagDays)}
+          <div className="timeline-dates">
+            <div className="date-column">
+              <span>{message('localizedVersion')}</span>
+              <time dateTime={result.localizedAt}>{formatDate(result.localizedAt)}</time>
+            </div>
+            <ArrowRight aria-hidden="true" className="timeline-arrow" size={18} strokeWidth={1.8} />
+            <div className="date-column date-column--end">
+              <span>{message('englishOriginal')}</span>
+              <time dateTime={result.englishAt}>{formatDate(result.englishAt)}</time>
+            </div>
           </div>
-          <div className="date-column date-column--end">
-            <span>{message('englishOriginal')}</span>
-            <strong>{formatDate(result.englishAt)}</strong>
-          </div>
-          <div className="timeline-line" aria-hidden="true"><i /><i /></div>
         </section>
       )}
 
@@ -197,7 +203,7 @@ export default function App() {
       </div>
 
       {hostname && (
-        <footer>
+        <footer className="popup-footer">
           <span>{hostname}</span>
           {isCompared(result) && <span className="verified"><CircleCheck aria-hidden="true" size={15} strokeWidth={1.8} /> {message('verified')}</span>}
         </footer>

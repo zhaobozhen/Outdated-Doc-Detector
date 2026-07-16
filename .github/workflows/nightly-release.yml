@@ -1,0 +1,97 @@
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: '17 0 * * *'
+      timezone: Asia/Shanghai
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-release
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Validate and publish nightly
+    if: github.event_name == 'schedule' || github.ref_name == github.event.repository.default_branch
+    runs-on: macos-26
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.12.2
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx --no-install playwright install chromium
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run unit and fixture tests
+        run: npm test
+
+      - name: Build production extension
+        run: npm run build
+
+      - name: Run real MV3 browser tests
+        run: npm run test:e2e
+
+      - name: Package Chrome extension
+        run: npm run zip
+
+      - name: Prepare release assets
+        run: |
+          set -euo pipefail
+          artifact="$(find .output -maxdepth 1 -type f -name '*-chrome.zip' -print -quit)"
+          test -n "$artifact"
+          cp "$artifact" outdated-docs-nightly-chrome.zip
+          shasum -a 256 outdated-docs-nightly-chrome.zip > outdated-docs-nightly-chrome.zip.sha256
+
+          built_at="$(date -u '+%Y-%m-%d %H:%M UTC')"
+          short_sha="$(git rev-parse --short "$GITHUB_SHA")"
+          {
+            echo "Automated nightly build from the default branch."
+            echo
+            echo "- Commit: $short_sha ($GITHUB_SHA)"
+            echo "- Built: $built_at"
+            echo "- Validation: lint, typecheck, unit tests, production build, and Playwright MV3 tests"
+            echo
+            echo "This is an unsigned development build. Unzip it and load the directory from chrome://extensions in Developer mode."
+          } > nightly-notes.md
+
+      - name: Create or update nightly prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag_endpoint="repos/$GITHUB_REPOSITORY/git/refs/tags/nightly"
+
+          if gh api "$tag_endpoint" >/dev/null 2>&1; then
+            gh api --method PATCH "$tag_endpoint" -f sha="$GITHUB_SHA" -F force=true >/dev/null
+          else
+            gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref='refs/tags/nightly' -f sha="$GITHUB_SHA" >/dev/null
+          fi
+
+          title="Nightly $(TZ=Asia/Shanghai date '+%Y-%m-%d')"
+          if gh release view nightly >/dev/null 2>&1; then
+            gh release edit nightly --title "$title" --notes-file nightly-notes.md --prerelease
+            gh release upload nightly outdated-docs-nightly-chrome.zip outdated-docs-nightly-chrome.zip.sha256 --clobber
+          else
+            gh release create nightly outdated-docs-nightly-chrome.zip outdated-docs-nightly-chrome.zip.sha256 --verify-tag --title "$title" --notes-file nightly-notes.md --prerelease --latest=false
+          fi

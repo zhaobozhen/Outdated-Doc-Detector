@@ -33,7 +33,7 @@
   "optionsTitle": { "message": "Settings" },
   "optionsDescription": { "message": "Choose how freshness results are displayed." },
   "showPageNotice": { "message": "Show in-page notice" },
-  "showPageNoticeHelp": { "message": "Show a notice in the top-right corner when a translation is behind." },
+  "showPageNoticeHelp": { "message": "Show a centered notice near the top of the page when a translation is behind." },
   "privacyTitle": { "message": "Privacy" },
   "privacyCopy": { "message": "Checks only access the current document and its English original. The extension does not collect, upload, or share browsing data." },
   "autoSaved": { "message": "Settings save automatically" },

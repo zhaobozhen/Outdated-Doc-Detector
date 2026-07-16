@@ -1,10 +1,37 @@
 # Outdated Docs
 
+[![CI](https://github.com/zhaobozhen/Outdated-Doc-Detector/actions/workflows/ci.yml/badge.svg)](https://github.com/zhaobozhen/Outdated-Doc-Detector/actions/workflows/ci.yml)
+[![Nightly Release](https://github.com/zhaobozhen/Outdated-Doc-Detector/actions/workflows/nightly-release.yml/badge.svg)](https://github.com/zhaobozhen/Outdated-Doc-Detector/actions/workflows/nightly-release.yml)
+
 Outdated Docs is a bilingual Chrome extension that compares the last-updated
 date of a localized developer document with its English original. It reports
 timestamp lag without claiming that the page content is necessarily different.
 
-Outdated Docs 是一款默认支持中英双语的 Chrome 扩展。它对比开发者文档译文与英文原版的更新时间，只报告时间差，不推断内容或翻译质量。
+## Preview
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/in-page-notice-dark.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/in-page-notice-light.webp">
+    <img src="docs/screenshots/in-page-notice-light.webp" width="100%" alt="Outdated Docs showing a centered in-page notice on Android Developers">
+  </picture>
+</p>
+<p align="center">
+  <sub><strong>In-page notice</strong> — See the lag and both document dates without leaving the page.</sub>
+</p>
+
+<br>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/popup-dark.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/popup-light.webp">
+    <img src="docs/screenshots/popup-light.webp" width="300" alt="Outdated Docs Popup showing a severely outdated translation">
+  </picture>
+</p>
+<p align="center">
+  <sub><strong>Extension popup</strong> — Compare timestamps, open English, or run the check again.</sub>
+</p>
 
 ## Origin And Acknowledgements
 
@@ -12,12 +39,6 @@ This project is an independently maintained modern implementation inspired by
 [hanguokai/Outdated-Doc-Detector](https://github.com/hanguokai/Outdated-Doc-Detector),
 which established the original product idea and use case. This repository is
 not an official continuation published by the original project's author.
-
-本项目的产品思路参考了
-[hanguokai/Outdated-Doc-Detector](https://github.com/hanguokai/Outdated-Doc-Detector)。
-当前项目采用现代技术栈重新实现并独立维护，不是原项目作者发布的官方续作。感谢原项目对这一功能和使用场景的最初探索。
-
-![Severely outdated Popup state](e2e/extension.spec.ts-snapshots/popup-outdated-darwin.png)
 
 ## Product Shape
 
@@ -148,6 +169,25 @@ suite exercises the MV3 service worker, Popup, Options page, content script,
 Shadow Root, keyboard focus, SPA navigation, narrow layout, and light and dark
 themes. Use `npm run test:e2e:update` only after visually reviewing an intended
 UI change, then run `npm run test:e2e` again against the new baseline.
+
+## Continuous Integration And Nightly Releases
+
+[CI](.github/workflows/ci.yml) runs the complete validation gate on pushes to
+`main`, pull requests, and manual dispatches. The workflow uses a macOS runner
+because the accepted Playwright visual baselines are platform-specific.
+
+[Nightly Release](.github/workflows/nightly-release.yml) runs every day at
+00:17 Asia/Shanghai and can also be started manually from the Actions tab on
+the default branch. After the same validation gate passes, it updates the
+fixed [`nightly` prerelease](https://github.com/zhaobozhen/Outdated-Doc-Detector/releases/tag/nightly)
+with:
+
+- `outdated-docs-nightly-chrome.zip`
+- `outdated-docs-nightly-chrome.zip.sha256`
+
+Nightly builds are unsigned development packages and are never marked as the
+latest stable release. Unzip the package, open `chrome://extensions`, enable
+Developer mode, and load the unpacked directory.
 
 ## Localization
 

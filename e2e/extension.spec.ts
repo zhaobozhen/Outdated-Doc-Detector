@@ -76,7 +76,9 @@ test('popup has a complete dark theme', async () => {
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.goto(`chrome-extension://${extensionId}/popup.html?preview=stale`);
 
-  await expect(page.locator('.popup-shell')).toHaveScreenshot('popup-outdated-dark.png');
+  const popup = page.locator('.popup-shell');
+  await expect(popup).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+  await expect(popup).toHaveScreenshot('popup-outdated-dark.png');
   await page.close();
 });
 
@@ -140,6 +142,12 @@ test('content script mounts an isolated, dismissible notice', async () => {
 
   const notice = page.locator('.page-notice');
   await expect(notice).toBeVisible();
+  await expect(notice).toHaveCSS('user-select', 'none');
+  const comparison = notice.getByRole('group', {
+    name: /更新时间对比|Timestamp comparison/,
+  });
+  await expect(comparison).toContainText('2026-03-27');
+  await expect(comparison).toContainText('2026-07-10');
   await expect(notice).toHaveScreenshot('page-notice-outdated.png');
   const noticeBounds = await notice.evaluate((element) => {
     const bounds = element.getBoundingClientRect();

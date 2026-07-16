@@ -188,6 +188,20 @@ surface changes.
   references are source artifacts and should be committed when intentionally
   changed.
 
+## GitHub Automation Rules
+
+- `.github/workflows/ci.yml` runs the full release gate for `main`, pull
+  requests, and manual dispatches with read-only repository permissions.
+- `.github/workflows/nightly-release.yml` runs daily at 00:17 Asia/Shanghai
+  and by manual dispatch from the default branch. It alone has
+  `contents: write`.
+- Both workflows use `macos-26` because the accepted Playwright screenshots
+  are Darwin-specific. Changing runner OS requires replacing and reviewing the
+  corresponding visual baselines.
+- Nightly publication moves the lightweight `nightly` tag and updates one
+  prerelease in place. It publishes the Chrome ZIP plus a SHA-256 checksum and
+  must not mark that prerelease as the latest stable release.
+
 ## Commit Rules
 
 - Run the relevant validation commands before committing and inspect
