@@ -167,8 +167,11 @@ surface changes.
   checks and `npm run test:e2e`.
 - Visual changes require inspecting both the accepted concept under
   `docs/design/` and the latest implementation screenshot in the same QA pass.
-- Run `npm run test:e2e:update` only after intentionally accepting a visual
-  change. Then run normal `npm run test:e2e` against the new snapshots.
+- Use `.github/workflows/update-visual-baselines.yml` after intentionally
+  accepting a visual change. Download and inspect its macOS 26 artifact before
+  replacing the tracked snapshots, then run normal `npm run test:e2e`.
+- `npm run test:e2e:update` is suitable for local preview, but locally generated
+  Darwin snapshots are not canonical when the host OS differs from the CI image.
 - Browser GUI validation must launch the entire Playwright/WXT parent process
   outside the sandbox. Do not start only a child Chromium process outside it.
 - Release preparation requires the full README gate followed by `npm run zip`.
@@ -202,9 +205,13 @@ surface changes.
 - `.github/workflows/nightly-release.yml` runs daily at 00:17 Asia/Shanghai
   and by manual dispatch from the default branch. It alone has
   `contents: write`.
-- Both workflows use `macos-26` because the accepted Playwright screenshots
+- `.github/workflows/update-visual-baselines.yml` is manual-only and uploads
+  macOS 26 snapshot candidates without writing to the repository.
+- All three workflows use `macos-26` because the accepted Playwright screenshots
   are Darwin-specific. Changing runner OS requires replacing and reviewing the
   corresponding visual baselines.
+- CI and Nightly retain Playwright failure screenshots and diffs for 7 days so
+  visual failures can be reviewed before changing a baseline or tolerance.
 - Nightly publication moves the lightweight `nightly` tag and updates one
   prerelease in place. It publishes the Chrome ZIP plus a SHA-256 checksum and
   must not mark that prerelease as the latest stable release.

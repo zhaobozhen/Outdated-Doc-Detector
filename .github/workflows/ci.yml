@@ -55,5 +55,14 @@ jobs:
       - name: Run real MV3 browser tests
         run: npm run test:e2e
 
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Package Chrome extension
         run: npm run zip
