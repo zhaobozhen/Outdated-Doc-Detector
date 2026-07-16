@@ -6,6 +6,17 @@ timestamp lag without claiming that the page content is necessarily different.
 
 Outdated Docs 是一款默认支持中英双语的 Chrome 扩展。它对比开发者文档译文与英文原版的更新时间，只报告时间差，不推断内容或翻译质量。
 
+## Origin And Acknowledgements
+
+This project is an independently maintained modern implementation inspired by
+[hanguokai/Outdated-Doc-Detector](https://github.com/hanguokai/Outdated-Doc-Detector),
+which established the original product idea and use case. This repository is
+not an official continuation published by the original project's author.
+
+本项目的产品思路参考了
+[hanguokai/Outdated-Doc-Detector](https://github.com/hanguokai/Outdated-Doc-Detector)。
+当前项目采用现代技术栈重新实现并独立维护，不是原项目作者发布的官方续作。感谢原项目对这一功能和使用场景的最初探索。
+
 ![Severely outdated Popup state](e2e/extension.spec.ts-snapshots/popup-outdated-darwin.png)
 
 ## Product Shape

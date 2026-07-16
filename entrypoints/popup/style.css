@@ -20,8 +20,10 @@ button {
 
 .popup-shell {
   --state-color: var(--od-text-muted);
+  -webkit-user-select: none;
   background: var(--od-surface);
   min-height: 472px;
+  user-select: none;
   width: 368px;
 }
 

@@ -7,7 +7,7 @@
   max-width: calc(100vw - 24px);
   pointer-events: none;
   position: fixed;
-  top: max(12px, env(safe-area-inset-top));
+  top: max(80px, calc(env(safe-area-inset-top) + 12px));
   transform: translateX(-50%);
   width: 420px;
   z-index: 2147483647;
@@ -201,7 +201,6 @@
 @media (max-width: 480px) {
   .outdated-docs-host {
     max-width: calc(100vw - 16px);
-    top: max(8px, env(safe-area-inset-top));
   }
 
   .page-notice { border-radius: 16px; }

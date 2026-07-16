@@ -36,7 +36,9 @@ test('popup severely-outdated state matches the visual contract', async () => {
 
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/严重过时|Severely outdated/);
   await expect(page.locator('.icon-button span')).toHaveText(/设置|Settings/);
-  await expect(page.locator('.popup-shell')).toHaveScreenshot('popup-outdated.png');
+  const popup = page.locator('.popup-shell');
+  await expect(popup).toHaveCSS('user-select', 'none');
+  await expect(popup).toHaveScreenshot('popup-outdated.png');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: /设置|Settings/ })).toBeFocused();
   await page.close();
@@ -143,9 +145,12 @@ test('content script mounts an isolated, dismissible notice', async () => {
     const bounds = element.getBoundingClientRect();
     return { centerX: bounds.x + bounds.width / 2, top: bounds.top };
   });
+  const headerBottom = await page.locator('header').evaluate(
+    (element) => element.getBoundingClientRect().bottom,
+  );
   expect(Math.abs(noticeBounds.centerX - 640)).toBeLessThanOrEqual(1);
-  expect(noticeBounds.top).toBeGreaterThanOrEqual(8);
-  expect(noticeBounds.top).toBeLessThanOrEqual(20);
+  expect(noticeBounds.top).toBeGreaterThanOrEqual(headerBottom);
+  expect(noticeBounds.top).toBeLessThanOrEqual(headerBottom + 12);
   const englishPagePromise = context.waitForEvent('page');
   await notice.getByRole('button', { name: /打开英文原版|Open English original/ }).click();
   const englishPage = await englishPagePromise;
@@ -171,9 +176,13 @@ test('in-page notice stays centered on a narrow page', async () => {
   await expect(notice).toBeVisible();
   const noticeBounds = await notice.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
-    return { centerX: bounds.x + bounds.width / 2, width: bounds.width };
+    return { centerX: bounds.x + bounds.width / 2, top: bounds.top, width: bounds.width };
   });
+  const headerBottom = await page.locator('header').evaluate(
+    (element) => element.getBoundingClientRect().bottom,
+  );
   expect(Math.abs(noticeBounds.centerX - 187.5)).toBeLessThanOrEqual(1);
+  expect(noticeBounds.top).toBeGreaterThanOrEqual(headerBottom);
   expect(noticeBounds.width).toBeLessThanOrEqual(359);
   await expect(notice).toHaveScreenshot('page-notice-narrow.png');
   await page.close();
