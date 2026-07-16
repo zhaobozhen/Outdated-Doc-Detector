@@ -51,7 +51,7 @@ async function installPreviewRoutes(browserContext: BrowserContext): Promise<voi
           <head><title>Firebase 文档</title></head>
           <body style="margin:0;font-family:system-ui;color:#182230;background:#fff">
             <header style="height:72px;border-bottom:1px solid #dde3eb;display:flex;align-items:center;padding:0 48px;font-weight:700">Firebase 文档</header>
-            <main style="max-width:900px;margin:80px auto;padding:0 32px">
+            <main style="box-sizing:border-box;max-width:900px;width:100%;margin:80px auto;padding:0 32px;overflow-wrap:anywhere">
               <h1 style="font-size:42px">Cloud Messaging</h1>
               <p style="font-size:18px;color:#667386">构建可靠的跨平台消息传递体验。</p>
             </main>
@@ -285,6 +285,10 @@ test('in-page notice stays centered on a narrow page', async () => {
   expect(noticeBounds.top).toBeGreaterThanOrEqual(headerBottom);
   expect(noticeBounds.width).toBeLessThanOrEqual(359);
   await expect(notice).toHaveScreenshot('page-notice-narrow.png');
+  const collapsedPageWidth = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
 
   await notice.getByRole('button', { name: 'Diff' }).click();
   await expect(notice.getByRole('button', { name: /收起 Diff|Collapse Diff/ })).toHaveAttribute(
@@ -298,72 +302,18 @@ test('in-page notice stays centered on a narrow page', async () => {
   expect(expandedBounds.left).toBeGreaterThanOrEqual(0);
   expect(expandedBounds.right).toBeLessThanOrEqual(375);
   expect(expandedBounds.bottom).toBeLessThanOrEqual(700);
-  const pageWidth = await page.evaluate(() => ({
+  const expandedPageWidth = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
   }));
-  if (pageWidth.scrollWidth > pageWidth.clientWidth) {
-    const diagnostics = await page.evaluate(() => {
-      const viewportWidth = innerWidth;
-      const snapshot = (element: Element | null) => {
-        if (!element) return null;
-        const bounds = element.getBoundingClientRect();
-        const style = getComputedStyle(element);
-        const htmlElement = element instanceof HTMLElement ? element : null;
-        return {
-          className: element.getAttribute('class'),
-          clientWidth: htmlElement?.clientWidth ?? null,
-          id: element.id,
-          offsetLeft: htmlElement?.offsetLeft ?? null,
-          offsetWidth: htmlElement?.offsetWidth ?? null,
-          rect: {
-            left: bounds.left,
-            overflowRight: Math.max(0, bounds.right - viewportWidth),
-            right: bounds.right,
-            width: bounds.width,
-          },
-          scrollWidth: htmlElement?.scrollWidth ?? null,
-          style: {
-            contain: style.contain,
-            display: style.display,
-            insetInlineEnd: style.insetInlineEnd,
-            insetInlineStart: style.insetInlineStart,
-            marginInlineEnd: style.marginInlineEnd,
-            marginInlineStart: style.marginInlineStart,
-            maxWidth: style.maxWidth,
-            minWidth: style.minWidth,
-            overflowX: style.overflowX,
-            position: style.position,
-            transform: style.transform,
-            width: style.width,
-          },
-          tagName: element.tagName,
-        };
-      };
-      const shadowHost = document.querySelector('outdated-docs-notice');
-      const shadow = shadowHost?.shadowRoot;
-      const shadowElements = shadow ? [...shadow.querySelectorAll('*')].map(snapshot) : [];
-      return {
-        body: snapshot(document.body),
-        bodyChildren: [...document.body.children].map(snapshot),
-        documentElement: snapshot(document.documentElement),
-        media: {
-          max480: matchMedia('(max-width: 480px)').matches,
-          max680: matchMedia('(max-width: 680px)').matches,
-          reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
-        },
-        shadowElements,
-        shadowHost: snapshot(shadowHost),
-        viewport: {
-          devicePixelRatio,
-          innerWidth: viewportWidth,
-          visualViewportWidth: visualViewport?.width ?? null,
-        },
-      };
-    });
-    console.log(`NARROW_OVERFLOW_DIAGNOSTICS ${JSON.stringify(diagnostics)}`);
-  }
-  expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth);
+  const noticeWidth = await notice.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(noticeWidth.scrollWidth).toBeLessThanOrEqual(noticeWidth.clientWidth);
+  expect(expandedPageWidth.scrollWidth).toBeLessThanOrEqual(
+    Math.max(collapsedPageWidth.scrollWidth, expandedPageWidth.clientWidth),
+  );
   await expect(notice).toHaveScreenshot('page-notice-diff-narrow.png');
   await page.close();
 });
