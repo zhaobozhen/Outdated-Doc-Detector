@@ -4,7 +4,12 @@ import { browser } from 'wxt/browser';
 import { PageNotice } from '../../components/PageNotice';
 import { DOCUMENT_MATCHES } from '../../lib/analyzers/sites';
 import { analyzePage } from '../../lib/analysis/analyzePage';
-import { createPreviewResult } from '../../lib/analysis/preview';
+import type { DocumentDiff } from '../../lib/analysis/diffTypes';
+import {
+  createPreviewDocumentDiff,
+  createPreviewResult,
+  createStabilityPreviewResult,
+} from '../../lib/analysis/preview';
 import type { WarningKind } from '../../lib/analysis/presentation';
 import type { AnalysisResult, ComparedResult } from '../../lib/analysis/types';
 import { isWarningResult } from '../../lib/analysis/types';
@@ -25,6 +30,7 @@ export default defineContentScript({
     let runId = 0;
     let dismissedUrl: string | null = null;
     let currentResult: AnalysisResult | null = null;
+    let currentDiff: DocumentDiff | null = null;
 
     const ui = await createShadowRootUi(ctx, {
       name: 'outdated-docs-notice',
@@ -64,6 +70,7 @@ export default defineContentScript({
 
       root.render(
         <PageNotice
+          diff={currentDiff}
           onClose={() => {
             dismissedUrl = result.pageUrl;
             root?.render(null);
@@ -91,26 +98,35 @@ export default defineContentScript({
 
       const previewKind = new URLSearchParams(location.search).get('outdated-docs-preview');
       if (import.meta.env.MODE === 'test' && previewKind !== null) {
+        const previewDiff = new URLSearchParams(location.search).get('outdated-docs-diff');
         const previewResult: AnalysisResult = {
-          ...createPreviewResult(previewKind),
+          ...(previewDiff === 'stability'
+            ? createStabilityPreviewResult()
+            : createPreviewResult(previewKind)),
           pageUrl: location.href,
         };
         currentResult = previewResult;
+        currentDiff = createPreviewDocumentDiff(previewDiff);
         await publishResult(previewResult);
         await renderNotice(previewResult);
         return previewResult;
       }
 
+      let documentDiff: DocumentDiff | null = null;
       const result = await analyzePage({
         document,
         url: new URL(location.href),
         fetchEnglish: (url, site) => sendRuntimeMessage({ type: 'fetch:english', url, site }),
+        onDocumentDiff: (diff) => {
+          documentDiff = diff;
+        },
       });
 
       if (thisRun !== runId) {
         return result;
       }
       currentResult = result;
+      currentDiff = documentDiff;
       await publishResult(result);
       await renderNotice(result);
       return result;
@@ -143,6 +159,7 @@ export default defineContentScript({
       runId += 1;
       dismissedUrl = null;
       currentResult = null;
+      currentDiff = null;
       root?.render(null);
       void detect();
     };

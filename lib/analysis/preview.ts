@@ -1,4 +1,5 @@
 import { isFreshnessKind, type FreshnessKind } from './classify';
+import type { DocumentDiff } from './diffTypes';
 import type { ComparedResult } from './types';
 
 const DAY_MS = 86_400_000;
@@ -25,5 +26,63 @@ export function createPreviewResult(value: string | null): ComparedResult {
     lagMs: lagDays * DAY_MS,
     lagDays,
     checkedAt: '2026-07-15T00:00:00.000Z',
+  };
+}
+
+export function createPreviewDocumentDiff(value: string | null): DocumentDiff {
+  const changed = value === 'changed';
+  return {
+    changes: changed
+      ? [
+          {
+            added: ['SnapshotStateList<T>'],
+            confidence: 'high',
+            kind: 'inline-code',
+            removed: [],
+            sectionTitle: '修复稳定性问题',
+            truncated: false,
+          },
+          {
+            added: ['val items = immutableListOf(value)'],
+            confidence: 'high',
+            kind: 'code',
+            removed: ['val items = listOf(value)'],
+            sectionTitle: '不可变集合',
+            truncated: false,
+          },
+        ]
+      : [],
+    english: { codeBlocks: 3, inlineCode: 19, links: 6, sections: 9, tables: 0 },
+    localized: {
+      codeBlocks: changed ? 2 : 3,
+      inlineCode: changed ? 18 : 19,
+      links: 6,
+      sections: 9,
+      tables: 0,
+    },
+    matchedSections: 9,
+    reliability: 'exact',
+    truncated: false,
+    unalignedSections: 0,
+  };
+}
+
+export function createStabilityPreviewResult(): ComparedResult {
+  const localizedAt = new Date('2025-07-26T00:00:00.000Z');
+  const englishAt = new Date('2026-01-16T00:00:00.000Z');
+  const lagMs = englishAt.getTime() - localizedAt.getTime();
+  return {
+    checkedAt: '2026-07-15T00:00:00.000Z',
+    englishAt: englishAt.toISOString(),
+    englishUrl:
+      'https://developer.android.com/develop/ui/compose/performance/stability?hl=en',
+    kind: 'stale',
+    lagDays: Math.floor(lagMs / DAY_MS),
+    lagMs,
+    locale: 'zh-CN',
+    localizedAt: localizedAt.toISOString(),
+    pageUrl:
+      'https://developer.android.com/develop/ui/compose/performance/stability?hl=zh-cn',
+    site: 'google-devsite',
   };
 }

@@ -34,6 +34,15 @@ async function installPreviewRoutes(browserContext: BrowserContext): Promise<voi
       body: '<!doctype html><html lang="en"><body>English original</body></html>',
     });
   });
+  await browserContext.route(
+    'https://developer.android.com/develop/ui/compose/performance/stability?hl=en',
+    async (route) => {
+      await route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><html lang="en"><body>English original</body></html>',
+      });
+    },
+  );
   await browserContext.route('https://firebase.google.com/__outdated_docs_preview**', async (route) => {
     await route.fulfill({
       contentType: 'text/html',
@@ -183,7 +192,7 @@ test('content script mounts an isolated, dismissible notice', async () => {
   const page = await context.newPage();
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(
-    'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale',
+    'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale&outdated-docs-diff=stability',
   );
 
   const notice = page.locator('.page-notice');
@@ -192,23 +201,42 @@ test('content script mounts an isolated, dismissible notice', async () => {
   const comparison = notice.getByRole('group', {
     name: /更新时间对比|Timestamp comparison/,
   });
-  await expect(comparison).toContainText('2026-03-27');
-  await expect(comparison).toContainText('2026-07-10');
+  await expect(comparison).toContainText('2025-07-26');
+  await expect(comparison).toContainText('2026-01-16');
   await expect(notice).toHaveScreenshot('page-notice-outdated.png');
-  const noticeBounds = await notice.evaluate((element) => {
+  const collapsedBounds = await notice.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
-    return { centerX: bounds.x + bounds.width / 2, top: bounds.top };
+    return { centerX: bounds.x + bounds.width / 2, height: bounds.height, top: bounds.top, width: bounds.width };
   });
-  const headerBottom = await page.locator('header').evaluate(
+  const headerBottom = await page.locator('body > header').evaluate(
     (element) => element.getBoundingClientRect().bottom,
   );
-  expect(Math.abs(noticeBounds.centerX - 640)).toBeLessThanOrEqual(1);
-  expect(noticeBounds.top).toBeGreaterThanOrEqual(headerBottom);
-  expect(noticeBounds.top).toBeLessThanOrEqual(headerBottom + 12);
+  expect(Math.abs(collapsedBounds.centerX - 640)).toBeLessThanOrEqual(1);
+  expect(collapsedBounds.top).toBeGreaterThanOrEqual(headerBottom);
+  expect(collapsedBounds.top).toBeLessThanOrEqual(headerBottom + 12);
+
+  const diffButton = notice.getByRole('button', { name: 'Diff' });
+  await diffButton.click();
+  await expect(diffButton).toHaveAttribute('aria-expanded', 'true');
+  await expect.poll(() => notice.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeGreaterThan(collapsedBounds.width + 200);
+  const expandedBounds = await notice.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return { bottom: bounds.bottom, centerX: bounds.x + bounds.width / 2, height: bounds.height };
+  });
+  expect(Math.abs(expandedBounds.centerX - 640)).toBeLessThanOrEqual(1);
+  expect(expandedBounds.height).toBeGreaterThan(collapsedBounds.height);
+  expect(expandedBounds.bottom).toBeLessThanOrEqual(800);
+  await expect(notice).toContainText(/未检测到可验证差异|No verifiable differences/);
+  await expect(notice).toContainText(/9\/9 个章节|9\/9 sections/);
+  await expect(notice).toHaveScreenshot('page-notice-diff-aligned.png');
+
   const englishPagePromise = context.waitForEvent('page');
   await notice.getByRole('button', { name: /打开英文原版|Open English original/ }).click();
   const englishPage = await englishPagePromise;
-  await expect(englishPage).toHaveURL('https://firebase.google.com/docs/cloud-messaging?hl=en');
+  await expect(englishPage).toHaveURL(
+    'https://developer.android.com/develop/ui/compose/performance/stability?hl=en',
+  );
   await englishPage.close();
   await notice.getByRole('button', { name: /关闭|Close/ }).click();
   await expect(notice).toBeHidden();
@@ -219,11 +247,28 @@ test('content script mounts an isolated, dismissible notice', async () => {
   await page.close();
 });
 
+test('in-page Diff renders verified code and API evidence', async () => {
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(
+    'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale&outdated-docs-diff=changed',
+  );
+
+  const notice = page.locator('.page-notice');
+  await notice.getByRole('button', { name: 'Diff' }).click();
+  await expect(notice).toContainText(/2 条可验证差异|2 verifiable differences/);
+  await expect(notice).toContainText('SnapshotStateList<T>');
+  await expect(notice).toContainText('val items = immutableListOf(value)');
+  await expect(notice).toContainText('val items = listOf(value)');
+  await expect(notice).toHaveScreenshot('page-notice-diff-changed.png');
+  await page.close();
+});
+
 test('in-page notice stays centered on a narrow page', async () => {
   const page = await context.newPage();
   await page.setViewportSize({ width: 375, height: 700 });
   await page.goto(
-    'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale&narrow=1',
+    'https://firebase.google.com/__outdated_docs_preview?outdated-docs-preview=stale&outdated-docs-diff=stability&narrow=1',
   );
 
   const notice = page.locator('.page-notice');
@@ -232,13 +277,32 @@ test('in-page notice stays centered on a narrow page', async () => {
     const bounds = element.getBoundingClientRect();
     return { centerX: bounds.x + bounds.width / 2, top: bounds.top, width: bounds.width };
   });
-  const headerBottom = await page.locator('header').evaluate(
+  const headerBottom = await page.locator('body > header').evaluate(
     (element) => element.getBoundingClientRect().bottom,
   );
   expect(Math.abs(noticeBounds.centerX - 187.5)).toBeLessThanOrEqual(1);
   expect(noticeBounds.top).toBeGreaterThanOrEqual(headerBottom);
   expect(noticeBounds.width).toBeLessThanOrEqual(359);
   await expect(notice).toHaveScreenshot('page-notice-narrow.png');
+
+  await notice.getByRole('button', { name: 'Diff' }).click();
+  await expect(notice.getByRole('button', { name: /收起 Diff|Collapse Diff/ })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  const expandedBounds = await notice.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return { bottom: bounds.bottom, left: bounds.left, right: bounds.right };
+  });
+  expect(expandedBounds.left).toBeGreaterThanOrEqual(0);
+  expect(expandedBounds.right).toBeLessThanOrEqual(375);
+  expect(expandedBounds.bottom).toBeLessThanOrEqual(700);
+  const pageWidth = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth);
+  await expect(notice).toHaveScreenshot('page-notice-diff-narrow.png');
   await page.close();
 });
 
@@ -247,9 +311,12 @@ test('in-page notice has a complete dark theme', async () => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.goto(
-    'https://firebase.google.com/__outdated_docs_dark_preview?outdated-docs-preview=stale',
+    'https://firebase.google.com/__outdated_docs_dark_preview?outdated-docs-preview=stale&outdated-docs-diff=stability',
   );
 
-  await expect(page.locator('.page-notice')).toHaveScreenshot('page-notice-outdated-dark.png');
+  const notice = page.locator('.page-notice');
+  await expect(notice).toHaveScreenshot('page-notice-outdated-dark.png');
+  await notice.getByRole('button', { name: 'Diff' }).click();
+  await expect(notice).toHaveScreenshot('page-notice-diff-dark.png');
   await page.close();
 });

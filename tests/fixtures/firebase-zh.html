@@ -8,7 +8,20 @@
     />
   </head>
   <body>
-    <main>Firebase Cloud Messaging</main>
+    <main>
+      <article class="devsite-article">
+        <div class="devsite-article-body">
+          <h2 id="overview">概览</h2>
+          <p>
+            使用 <code>FirebaseMessaging</code> 并查看
+            <a href="/docs/cloud-messaging/send-message?hl=zh-cn">发送消息</a>。
+          </p>
+          <devsite-code><pre>val message = FirebaseMessaging.getInstance()</pre></devsite-code>
+          <h2 id="delivery">消息传递</h2>
+          <p>消息通过 <code>onMessageReceived</code> 回调传递。</p>
+        </div>
+      </article>
+    </main>
     <devsite-content-footer>
       <p>最后更新时间 (UTC)：2026-03-27。</p>
     </devsite-content-footer>

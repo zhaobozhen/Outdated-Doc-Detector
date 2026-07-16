@@ -1,5 +1,7 @@
 import { findAdapter } from '../analyzers';
 import { classifyFreshness } from './classify';
+import { createDocumentDiff } from './documentDiff';
+import type { DocumentDiff } from './diffTypes';
 import type { AnalysisResult, FetchedPage, UnknownReason } from './types';
 
 interface AnalyzePageOptions {
@@ -10,6 +12,7 @@ interface AnalyzePageOptions {
     site: NonNullable<ReturnType<typeof findAdapter>>['id'],
   ) => Promise<FetchedPage>;
   now?: Date;
+  onDocumentDiff?: (diff: DocumentDiff | null) => void;
 }
 
 export async function analyzePage({
@@ -17,6 +20,7 @@ export async function analyzePage({
   url,
   fetchEnglish,
   now = new Date(),
+  onDocumentDiff,
 }: AnalyzePageOptions): Promise<AnalysisResult> {
   const checkedAt = now.toISOString();
   const adapter = findAdapter(url);
@@ -79,6 +83,16 @@ export async function analyzePage({
   }
 
   const freshness = classifyFreshness(new Date(localized.localizedAt), new Date(englishAt));
+  try {
+    const localizedComparable = adapter.inspectComparable(document, url);
+    const englishComparable = adapter.inspectComparable(
+      englishDocument,
+      new URL(fetched.url),
+    );
+    onDocumentDiff?.(createDocumentDiff(localizedComparable, englishComparable));
+  } catch {
+    onDocumentDiff?.(null);
+  }
   return {
     ...freshness,
     site: localized.site,

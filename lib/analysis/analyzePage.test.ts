@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { analyzePage } from './analyzePage';
+import type { DocumentDiff } from './diffTypes';
 
 const localizedHtml = readFileSync('tests/fixtures/firebase-zh.html', 'utf8');
 const englishHtml = readFileSync('tests/fixtures/firebase-en.html', 'utf8');
@@ -58,6 +59,7 @@ describe('analyzePage', () => {
   it('reports the verified Firebase example as 105 days severely outdated', async () => {
     const document = new DOMParser().parseFromString(localizedHtml, 'text/html');
     let requestedSite: string | null = null;
+    let documentDiff: DocumentDiff | null = null;
 
     await expect(
       analyzePage({
@@ -72,6 +74,9 @@ describe('analyzePage', () => {
           };
         },
         now: new Date('2026-07-15T00:00:00.000Z'),
+        onDocumentDiff: (diff) => {
+          documentDiff = diff;
+        },
       }),
     ).resolves.toEqual({
       kind: 'stale',
@@ -86,6 +91,13 @@ describe('analyzePage', () => {
       checkedAt: '2026-07-15T00:00:00.000Z',
     });
     expect(requestedSite).toBe('google-devsite');
+    expect(documentDiff).toMatchObject({
+      changes: [],
+      english: { codeBlocks: 1, inlineCode: 2, links: 1, sections: 2 },
+      localized: { codeBlocks: 1, inlineCode: 2, links: 1, sections: 2 },
+      matchedSections: 2,
+      reliability: 'exact',
+    });
   });
 
   it('returns a retryable error instead of an outdated warning when the network fails', async () => {

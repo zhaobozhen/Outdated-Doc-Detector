@@ -5,6 +5,7 @@ Outdated Docs processes documentation freshness locally in the browser.
 - It reads the current supported documentation page and fetches that page’s declared English original.
 - It stores one display preference in Chrome synchronized storage: whether to show the in-page notice.
 - It keeps the latest analysis result in Chrome session storage for the current tab and removes it on navigation or when the tab closes.
+- It computes optional structural, code, API-token, and link evidence locally from those two documents. This evidence stays in page memory and is not persisted.
 - It does not collect, upload, sell, or share browsing history, document content, identifiers, or usage data.
 - It has no account system, analytics, telemetry, backend service, or remotely hosted executable code.
 
@@ -17,6 +18,7 @@ Outdated Docs 在浏览器本地完成文档时效检测。
 - 扩展只读取当前受支持的文档页面，并请求该页面声明的英文原版。
 - 扩展仅在 Chrome 同步存储中保存一个显示设置：是否显示页内提醒。
 - 当前标签页的最近一次检测结果保存在 Chrome 会话存储中，并在页面导航或标签页关闭后删除。
+- 扩展会在本地从这两份文档中计算可选的结构、代码、API 标记和链接证据；这些证据只保留在页面内存中，不会持久化。
 - 扩展不会收集、上传、出售或共享浏览历史、文档内容、身份标识或使用数据。
 - 扩展不包含账号、分析、遥测、后端服务或远程托管的可执行代码。
 

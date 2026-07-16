@@ -70,8 +70,10 @@ surface changes.
 ## Core Product Decisions
 
 - Chrome Manifest V3 is the only first-release browser target.
-- The extension reports timestamp lag. It does not claim content differs and
-  does not judge translation quality.
+- The extension reports timestamp lag. Its optional Diff view may report only
+  adapter-verifiable section, code, API-token, link-target, and table-structure
+  evidence; it must not treat translated prose as a change or judge translation
+  quality.
 - Unreliable inputs must produce `unknown` or a retryable `error`. Never turn a
   missing date, missing English link, invalid date, redirect mismatch, or
   network failure into a freshness warning.
@@ -81,6 +83,9 @@ surface changes.
 - The content script parses both the current DOM and returned English HTML. The
   service worker owns only validated cross-origin retrieval and extension
   state.
+- Diff evidence stays in content-script memory, reuses the already-fetched
+  English HTML, clears on navigation, and never enters `AnalysisResult`, runtime
+  messages, or `chrome.storage.session`.
 - The only persisted preference is `showPageNotice=true` in
   `chrome.storage.sync`. Per-tab analysis snapshots use
   `chrome.storage.session`, are bound to the exact page URL, and clear on
@@ -109,6 +114,10 @@ surface changes.
 - Prefer a page's declared comparable timestamp. Google DevSite may fall back
   to a reliable HTTP `Last-Modified` value only when its English footer date is
   absent. Never use response time as document time.
+- Comparable content extraction remains adapter-owned. Google DevSite matches
+  stable heading IDs; MDN uses conservative ordered evidence matching and
+  suppresses unaligned sections. Keep extraction and diff limits explicit so a
+  large document cannot block the content script.
 - Parse external HTML as data. Do not inject fetched markup into extension UI.
 
 ## Messaging And State Rules

@@ -6,6 +6,8 @@
 Outdated Docs is a bilingual Chrome extension that compares the last-updated
 date of a localized developer document with its English original. It reports
 timestamp lag without claiming that the page content is necessarily different.
+For supported markup, an optional Diff view separately reports verifiable
+section, code, API-token, link-target, and table-structure evidence.
 
 ## Preview
 
@@ -18,6 +20,19 @@ timestamp lag without claiming that the page content is necessarily different.
 </p>
 <p align="center">
   <sub><strong>In-page notice</strong> — See the lag and both document dates without leaving the page.</sub>
+</p>
+
+<br>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/in-page-notice-diff-dark.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/in-page-notice-diff-light.webp">
+    <img src="docs/screenshots/in-page-notice-diff-light.webp" width="760" alt="Outdated Docs expanded Diff showing verified API and code changes">
+  </picture>
+</p>
+<p align="center">
+  <sub><strong>Evidence Diff</strong> — Expand the notice to inspect verifiable code and API evidence without comparing translated prose.</sub>
 </p>
 
 <br>
@@ -43,7 +58,7 @@ not an official continuation published by the original project's author.
 ## Product Shape
 
 - The content script reads the current document and renders an optional,
-  isolated in-page notice.
+  isolated in-page notice with an expandable local evidence diff.
 - The Manifest V3 service worker fetches the declared English original across
   origins and owns per-tab result state and toolbar status.
 - The Popup shows the comparison, opens the English original, and can trigger a
@@ -95,6 +110,7 @@ English original URL
   -> Manifest V3 service worker
   -> validated HTTPS request
   -> content script parses returned HTML
+  -> adapter extracts language-independent comparable evidence
   -> normalized analysis result
      -> toolbar icon
      -> Popup
@@ -114,6 +130,14 @@ selectors stay inside the adapter layer.
 The only synchronized setting is `showPageNotice`, which defaults to `true`.
 Per-tab results use `chrome.storage.session`, are bound to the exact document
 URL, and are cleared on navigation or when the tab closes.
+
+The evidence diff is computed from the two documents already available to the
+content script. Google DevSite sections are paired by stable heading anchors;
+MDN uses conservative ordered matching across API tokens, normalized links,
+structure, and position. Ordinary translated prose is intentionally excluded,
+and uncertain sections are suppressed instead of being reported as changes.
+Diff evidence remains in content-script memory and is not added to session
+storage or runtime result messages.
 
 ## Quick Start
 

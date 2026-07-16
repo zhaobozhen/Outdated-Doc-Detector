@@ -1,4 +1,5 @@
 import { findEnglishUrl, getLocale, isEnglishLocale, toIsoDate } from './dom';
+import { extractComparableDocument } from './comparableDocument';
 import { GOOGLE_DEVSITE_HOSTS } from './sites';
 import type { PageMetadata, SiteAdapter } from './types';
 
@@ -66,6 +67,25 @@ function forceEnglishLocale(value: string | null): string | null {
   return url.href;
 }
 
+function normalizeComparableLink(value: string, baseUrl: URL): string | null {
+  try {
+    const url = new URL(value, baseUrl);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null;
+    }
+
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (key === 'hl' || key === 'authuser' || key.startsWith('utm_')) {
+        url.searchParams.delete(key);
+      }
+    }
+    url.searchParams.sort();
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
 export const GoogleDevsiteAdapter: SiteAdapter = {
   id: 'google-devsite',
 
@@ -85,6 +105,15 @@ export const GoogleDevsiteAdapter: SiteAdapter = {
       localizedAt: readDevsiteDate(document),
       isEnglish,
     };
+  },
+
+  inspectComparable(document, url) {
+    return extractComparableDocument({
+      document,
+      normalizeLink: (href) => normalizeComparableLink(href, url),
+      rootSelector: '.devsite-article-body, article.devsite-article',
+      stableSectionIds: true,
+    });
   },
 
   inspectEnglish(document, lastModified) {
