@@ -1,13 +1,68 @@
 import { expect, test } from '@playwright/test';
 import { chromium, type BrowserContext } from 'playwright';
+import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const extensionPath = fileURLToPath(new URL('../.output/chrome-mv3-test', import.meta.url));
+const builtExtensionPath = fileURLToPath(new URL('../.output/chrome-mv3-test', import.meta.url));
 
 let context: BrowserContext;
 let extensionId: string;
+let temporaryExtensionRoot: string | undefined;
+
+async function createChineseTestExtension(): Promise<string> {
+  // Chromium on macOS follows the host UI locale for extension messages even
+  // when --lang is supplied, so use a single-locale copy for stable snapshots.
+  temporaryExtensionRoot = await mkdtemp(join(tmpdir(), 'outdated-docs-e2e-'));
+  const extensionPath = join(temporaryExtensionRoot, 'extension');
+  await cp(builtExtensionPath, extensionPath, { recursive: true });
+
+  await rm(join(extensionPath, '_locales', 'en'), { recursive: true, force: true });
+  const manifestPath = join(extensionPath, 'manifest.json');
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8')) as Record<string, unknown>;
+  manifest.default_locale = 'zh_CN';
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+  return extensionPath;
+}
+
+async function installPreviewRoutes(browserContext: BrowserContext): Promise<void> {
+  await browserContext.route('https://firebase.google.com/docs/cloud-messaging?hl=en', async (route) => {
+    await route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html><html lang="en"><body>English original</body></html>',
+    });
+  });
+  await browserContext.route('https://firebase.google.com/__outdated_docs_preview**', async (route) => {
+    await route.fulfill({
+      contentType: 'text/html',
+      body: `<!doctype html>
+        <html lang="zh-CN">
+          <head><title>Firebase 文档</title></head>
+          <body style="margin:0;font-family:system-ui;color:#182230;background:#fff">
+            <header style="height:72px;border-bottom:1px solid #dde3eb;display:flex;align-items:center;padding:0 48px;font-weight:700">Firebase 文档</header>
+            <main style="max-width:900px;margin:80px auto;padding:0 32px">
+              <h1 style="font-size:42px">Cloud Messaging</h1>
+              <p style="font-size:18px;color:#667386">构建可靠的跨平台消息传递体验。</p>
+            </main>
+          </body>
+        </html>`,
+    });
+  });
+  await browserContext.route(
+    'https://firebase.google.com/__outdated_docs_dark_preview**',
+    async (route) => {
+      await route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><html lang="zh-CN"><body style="background:#101923"></body></html>',
+      });
+    },
+  );
+}
 
 test.beforeAll(async () => {
+  const extensionPath = await createChineseTestExtension();
   context = await chromium.launchPersistentContext('', {
     channel: 'chromium',
     headless: false,
@@ -17,16 +72,26 @@ test.beforeAll(async () => {
       `--disable-extensions-except=${extensionPath}`,
       `--load-extension=${extensionPath}`,
       '--lang=zh-CN',
+      '--hide-scrollbars',
     ],
   });
+
+  await installPreviewRoutes(context);
 
   let serviceWorker = context.serviceWorkers()[0];
   serviceWorker ??= await context.waitForEvent('serviceworker');
   extensionId = new URL(serviceWorker.url()).host;
 });
 
+test.afterEach(async () => {
+  await Promise.all(context?.pages().map((page) => page.close()) ?? []);
+});
+
 test.afterAll(async () => {
-  await context.close();
+  await context?.close();
+  if (temporaryExtensionRoot) {
+    await rm(temporaryExtensionRoot, { recursive: true, force: true });
+  }
 });
 
 test('popup severely-outdated state matches the visual contract', async () => {
@@ -105,35 +170,16 @@ test('options page remains usable at 320 pixels', async () => {
 
   await page.getByRole('switch').focus();
   await expect(page.getByRole('switch')).toBeFocused();
-  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 320);
+  const pageWidth = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(pageWidth.scrollWidth).toBeLessThanOrEqual(pageWidth.clientWidth);
   await expect(page).toHaveScreenshot('options-narrow.png', { fullPage: true });
   await page.close();
 });
 
 test('content script mounts an isolated, dismissible notice', async () => {
-  await context.route('https://firebase.google.com/docs/cloud-messaging?hl=en', async (route) => {
-    await route.fulfill({
-      contentType: 'text/html',
-      body: '<!doctype html><html lang="en"><body>English original</body></html>',
-    });
-  });
-  await context.route('https://firebase.google.com/__outdated_docs_preview**', async (route) => {
-    await route.fulfill({
-      contentType: 'text/html',
-      body: `<!doctype html>
-        <html lang="zh-CN">
-          <head><title>Firebase 文档</title></head>
-          <body style="margin:0;font-family:system-ui;color:#182230;background:#fff">
-            <header style="height:72px;border-bottom:1px solid #dde3eb;display:flex;align-items:center;padding:0 48px;font-weight:700">Firebase 文档</header>
-            <main style="max-width:900px;margin:80px auto;padding:0 32px">
-              <h1 style="font-size:42px">Cloud Messaging</h1>
-              <p style="font-size:18px;color:#667386">构建可靠的跨平台消息传递体验。</p>
-            </main>
-          </body>
-        </html>`,
-    });
-  });
-
   const page = await context.newPage();
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(
@@ -197,13 +243,6 @@ test('in-page notice stays centered on a narrow page', async () => {
 });
 
 test('in-page notice has a complete dark theme', async () => {
-  await context.route('https://firebase.google.com/__outdated_docs_dark_preview**', async (route) => {
-    await route.fulfill({
-      contentType: 'text/html',
-      body: '<!doctype html><html lang="zh-CN"><body style="background:#101923"></body></html>',
-    });
-  });
-
   const page = await context.newPage();
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });

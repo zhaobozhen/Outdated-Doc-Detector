@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=low
+
       - name: Install Playwright Chromium
         run: npx --no-install playwright install chromium
 
@@ -70,7 +73,7 @@ jobs:
             echo
             echo "- Commit: $short_sha ($GITHUB_SHA)"
             echo "- Built: $built_at"
-            echo "- Validation: lint, typecheck, unit tests, production build, and Playwright MV3 tests"
+            echo "- Validation: dependency audit, lint, typecheck, unit tests, production build, and Playwright MV3 tests"
             echo
             echo "This is an unsigned development build. Unzip it and load the directory from chrome://extensions in Developer mode."
           } > nightly-notes.md

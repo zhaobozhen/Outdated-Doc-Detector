@@ -51,6 +51,7 @@ and recurring pitfalls only.
 | Task | Command |
 | --- | --- |
 | Install dependencies | `npm install` |
+| Audit dependencies | `npm audit --audit-level=low` |
 | WXT development mode | `npm run dev` |
 | Lint | `npm run lint` |
 | Typecheck | `npm run typecheck` |
@@ -182,8 +183,12 @@ surface changes.
 - Node.js 26.5.0 is the documented and CI-validated minimum. Keep both workflow
   pins, `package.json`, the lockfile root package, and README requirements
   aligned when changing it.
-- Direct `vite@6.4.3` and `vite-node@3.2.4` pins are intentional. Do not change
+- Direct `vite@8.1.4` and `vite-node@6.0.0` pins are intentional. Do not change
   the build toolchain without updating and proving the project requirement.
+- `package.json` overrides keep WXT's development-only dependency chain on
+  patched `esbuild`, `shell-quote`, `tmp`, and CommonJS-compatible `uuid`
+  versions. Remove an override only after the upstream chain is fixed and the
+  full release gate passes without it.
 - `.wxt/`, `.output/`, `test-results/`, `playwright-report/`, caches, and local
   logs are generated and must not be committed.
 - Visual snapshots, stable DOM fixtures, locale catalogs, icons, and design
