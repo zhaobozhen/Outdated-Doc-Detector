@@ -3,12 +3,12 @@
 .outdated-docs-host {
   color: var(--od-text);
   font-family: var(--od-font);
-  left: 50%;
+  inset-inline: 0;
+  margin-inline: auto;
   max-width: calc(100vw - 24px);
   pointer-events: none;
   position: fixed;
   top: max(80px, calc(env(safe-area-inset-top) + 12px));
-  transform: translateX(-50%);
   width: 760px;
   z-index: 2147483647;
 }
