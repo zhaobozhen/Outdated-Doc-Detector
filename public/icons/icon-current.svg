@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <path fill="#26364a" d="M24 10h52l28 28v35a39 39 0 0 0-12-7V44H70V22H36v79h31a39 39 0 0 0 6 12H24V10Z"/>
-  <path fill="#f7f9fc" d="M78 22v14h14L78 22Z"/>
-  <circle cx="91" cy="92" r="29" fill="#f7f9fc" stroke="#218a4a" stroke-width="10"/>
-  <path fill="none" stroke="#218a4a" stroke-linecap="round" stroke-linejoin="round" stroke-width="9" d="m76 92 10 10 20-22"/>
+<!-- Lucide FileCheck2, lucide-static v1.24.0, ISC -->
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#248a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10.5 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.706.706l3.588 3.588A2.4 2.4 0 0 1 20 8v6"/>
+  <path d="M14 2v5a1 1 0 0 0 1 1h5"/>
+  <path d="m14 20 2 2 4-4"/>
 </svg>

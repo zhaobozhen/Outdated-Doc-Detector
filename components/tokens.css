@@ -8,9 +8,10 @@
   --od-border: #d8dee8;
   --od-accent: #1e63d5;
   --od-accent-hover: #174fab;
-  --od-current: #218a4a;
-  --od-behind: #b56b08;
-  --od-outdated: #cf3f39;
+  --od-current: oklch(0.52 0.13 148);
+  --od-behind: oklch(0.50 0.115 82);
+  --od-outdated: oklch(0.52 0.16 52);
+  --od-stale: oklch(0.50 0.19 25);
   --od-focus: #1d6fe8;
   --od-shadow: 0 12px 34px rgb(18 32 51 / 14%);
   --od-radius: 12px;
@@ -27,9 +28,10 @@
     --od-border: #344255;
     --od-accent: #7eb1ff;
     --od-accent-hover: #a3c8ff;
-    --od-current: #6fd394;
-    --od-behind: #f2b65e;
-    --od-outdated: #ff8580;
+    --od-current: oklch(0.78 0.14 148);
+    --od-behind: oklch(0.80 0.13 84);
+    --od-outdated: oklch(0.76 0.15 55);
+    --od-stale: oklch(0.74 0.18 25);
     --od-focus: #8eb9ff;
     --od-shadow: 0 16px 42px rgb(0 0 0 / 34%);
   }

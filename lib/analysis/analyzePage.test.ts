@@ -55,7 +55,7 @@ describe('analyzePage', () => {
     });
   });
 
-  it('reports the verified Firebase example as 105 days outdated', async () => {
+  it('reports the verified Firebase example as 105 days severely outdated', async () => {
     const document = new DOMParser().parseFromString(localizedHtml, 'text/html');
     let requestedSite: string | null = null;
 
@@ -74,7 +74,7 @@ describe('analyzePage', () => {
         now: new Date('2026-07-15T00:00:00.000Z'),
       }),
     ).resolves.toEqual({
-      kind: 'outdated',
+      kind: 'stale',
       site: 'google-devsite',
       pageUrl: 'https://firebase.google.com/docs/cloud-messaging?hl=zh-cn',
       englishUrl: 'https://firebase.google.com/docs/cloud-messaging',

@@ -1,5 +1,6 @@
 import type { AnalysisResult } from './analysis/types';
 import type { FetchedPage } from './analysis/types';
+import { isFreshnessKind } from './analysis/classify';
 import { isSiteId } from './analyzers/sites';
 import type { SiteId } from './analyzers/sites';
 
@@ -19,6 +20,10 @@ export interface ExtensionMessageMap {
   'analysis:run': {
     request: Record<never, never>;
     response: AnalysisResult;
+  };
+  'english:open': {
+    request: { url: string; site: SiteId };
+    response: void;
   };
 }
 
@@ -65,7 +70,7 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
   if (value.kind === 'error') {
     return typeof value.englishUrl === 'string' && value.reason === 'network';
   }
-  if (value.kind === 'current' || value.kind === 'behind' || value.kind === 'outdated') {
+  if (isFreshnessKind(value.kind)) {
     return (
       typeof value.englishUrl === 'string' &&
       typeof value.localizedAt === 'string' &&
@@ -96,6 +101,9 @@ export function isExtensionMessage(value: unknown): value is ExtensionMessage {
       Number(value.tabId) >= 0 &&
       typeof value.pageUrl === 'string'
     );
+  }
+  if (value.type === 'english:open') {
+    return typeof value.url === 'string' && isSiteId(value.site);
   }
   return value.type === 'analysis:run';
 }

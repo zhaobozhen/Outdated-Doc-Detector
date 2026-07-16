@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { CircleCheck } from 'lucide-react';
 
-import { DocumentClockIcon } from '../../components/DocumentClockIcon';
+import { FreshnessIcon } from '../../components/FreshnessIcon';
 import { message } from '../../lib/i18n';
 import { getSettings, setShowPageNotice } from '../../lib/storage/settings';
 
@@ -29,7 +30,7 @@ export default function App() {
     <div className="options-shell">
       <header className="options-header">
         <div className="options-brand">
-          <DocumentClockIcon size={32} state="current" />
+          <FreshnessIcon size={32} state="current" strokeWidth={1.8} />
           <span>Outdated Docs</span>
         </div>
       </header>
@@ -63,10 +64,7 @@ export default function App() {
         </section>
 
         <div aria-live="polite" className="save-status">
-          <svg aria-hidden="true" className="save-check" fill="none" height="18" viewBox="0 0 18 18" width="18">
-            <circle cx="9" cy="9" r="7.5" stroke="currentColor" />
-            <path d="m5.5 9 2.2 2.2 4.8-4.8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" />
-          </svg>
+          <CircleCheck aria-hidden="true" className="save-check" size={18} strokeWidth={1.8} />
           {message(saved ? 'saved' : 'autoSaved')}
         </div>
       </main>

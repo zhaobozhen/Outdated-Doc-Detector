@@ -28,6 +28,7 @@ button {
 .popup-shell[data-state='current'] { --state-color: var(--od-current); }
 .popup-shell[data-state='behind'] { --state-color: var(--od-behind); }
 .popup-shell[data-state='outdated'] { --state-color: var(--od-outdated); }
+.popup-shell[data-state='stale'] { --state-color: var(--od-stale); }
 
 .popup-header {
   align-items: center;

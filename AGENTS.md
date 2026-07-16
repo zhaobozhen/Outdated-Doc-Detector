@@ -28,7 +28,7 @@ and recurring pitfalls only.
 | Site adapters | `lib/analyzers/` | TypeScript + DOM | Supported hosts, selectors, locale and timestamp extraction. |
 | Analysis | `lib/analysis/` | TypeScript | Result model, freshness classification, orchestration, cache guard. |
 | Messaging | `lib/messages.ts`, `lib/messageClient.ts` | Extension runtime | Validated request and response contracts. |
-| Shared UI | `components/` | React + CSS | Document clock icon, page notice, visual tokens. |
+| Shared UI | `components/` | React + CSS | Lucide freshness icon mapping, page notice, visual tokens. |
 | Localization | `public/_locales/`, `lib/i18n.ts` | Chrome i18n | English and Simplified Chinese product copy. |
 | Tests | `tests/fixtures/`, `e2e/` | Vitest + Playwright | Stable DOM fixtures, real MV3 flows, visual baselines. |
 
@@ -73,9 +73,9 @@ surface changes.
 - Unreliable inputs must produce `unknown` or a retryable `error`. Never turn a
   missing date, missing English link, invalid date, redirect mismatch, or
   network failure into a freshness warning.
-- Up to 30 minutes behind is `current`; over 30 minutes and under 45 days is
-  `behind`; at least 45 days is `outdated`. A localized page newer than English
-  remains `current`.
+- Up to 30 minutes behind is `current`; over 30 minutes and under 7 days is
+  `behind`; 7 through 44 days is `outdated`; at least 45 days is `stale`. A
+  localized page newer than English remains `current`.
 - The content script parses both the current DOM and returned English HTML. The
   service worker owns only validated cross-origin retrieval and extension
   state.
@@ -96,8 +96,14 @@ surface changes.
 - Adding a site requires a registry change, a matching adapter path, a stable
   DOM fixture, and focused adapter or analysis tests. Do not add broad wildcard
   host permissions for convenience.
-- English requests must use HTTPS, omit credentials, and remain inside the
-  originating adapter family before and after redirects.
+- English requests must use HTTPS and stay inside the originating adapter
+  family. Use site credentials because signed-in Google DevSite sessions
+  redirect anonymous requests through OAuth; set `redirect: 'error'` so those
+  credentials are never forwarded to another origin.
+- Google DevSite English URLs must explicitly set `hl=en`. Its bare
+  `hreflang="en"` URL is language-negotiated and can return the browser's
+  localized page; reject a fetched DevSite document whose declared locale is
+  not English before comparing timestamps.
 - Prefer a page's declared comparable timestamp. Google DevSite may fall back
   to a reliable HTTP `Last-Modified` value only when its English footer date is
   absent. Never use response time as document time.

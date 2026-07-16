@@ -28,17 +28,24 @@ describe('classifyFreshness', () => {
     });
   });
 
-  it('marks a translation over 30 minutes but under 45 days behind', () => {
+  it('marks a translation over 30 minutes but under 7 days slightly behind', () => {
     const localizedAt = new Date('2026-07-10T00:00:00.000Z');
-    const englishAt = new Date(localizedAt.getTime() + 44 * DAY);
+    const englishAt = new Date(localizedAt.getTime() + 6 * DAY);
 
     expect(classifyFreshness(localizedAt, englishAt).kind).toBe('behind');
   });
 
-  it('marks a translation at least 45 days behind as outdated', () => {
+  it('marks a translation from 7 through 44 days noticeably behind', () => {
+    const localizedAt = new Date('2026-03-27T00:00:00.000Z');
+    const englishAt = new Date(localizedAt.getTime() + 7 * DAY);
+
+    expect(classifyFreshness(localizedAt, englishAt).kind).toBe('outdated');
+  });
+
+  it('marks a translation at least 45 days behind severely outdated', () => {
     const localizedAt = new Date('2026-03-27T00:00:00.000Z');
     const englishAt = new Date(localizedAt.getTime() + 45 * DAY);
 
-    expect(classifyFreshness(localizedAt, englishAt).kind).toBe('outdated');
+    expect(classifyFreshness(localizedAt, englishAt).kind).toBe('stale');
   });
 });

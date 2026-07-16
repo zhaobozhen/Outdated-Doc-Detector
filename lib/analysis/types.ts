@@ -69,6 +69,6 @@ export type AnalysisResult =
 
 export function isWarningResult(
   result: AnalysisResult,
-): result is ComparedResult & { kind: 'behind' | 'outdated' } {
-  return result.kind === 'behind' || result.kind === 'outdated';
+): result is ComparedResult & { kind: 'behind' | 'outdated' | 'stale' } {
+  return result.kind === 'behind' || result.kind === 'outdated' || result.kind === 'stale';
 }

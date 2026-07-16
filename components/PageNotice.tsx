@@ -1,9 +1,16 @@
-import { DocumentClockIcon } from './DocumentClockIcon';
+import { ChevronRight, X } from 'lucide-react';
+
+import { FreshnessIcon } from './FreshnessIcon';
+import {
+  freshnessStatusText,
+  freshnessSummaryText,
+  type WarningKind,
+} from '../lib/analysis/presentation';
 import type { ComparedResult } from '../lib/analysis/types';
 import { message } from '../lib/i18n';
 
 interface PageNoticeProps {
-  result: ComparedResult & { kind: 'behind' | 'outdated' };
+  result: ComparedResult & { kind: WarningKind };
   onClose: () => void;
   onOpenEnglish: () => void;
 }
@@ -12,16 +19,12 @@ export function PageNotice({ result, onClose, onOpenEnglish }: PageNoticeProps) 
   return (
     <aside aria-live="polite" className="page-notice" data-state={result.kind}>
       <div className="page-notice__icon">
-        <DocumentClockIcon size={34} state={result.kind} />
+        <FreshnessIcon size={26} state={result.kind} strokeWidth={1.9} />
       </div>
       <div className="page-notice__copy">
-        <strong>{message(result.kind === 'outdated' ? 'statusOutdated' : 'statusBehind')}</strong>
-        <span>
-          {result.lagDays === 0
-            ? message('lagUnderDaySummary')
-            : message('lagSummary', String(result.lagDays))}
-        </span>
         <small>Outdated Docs</small>
+        <strong>{freshnessStatusText(result.kind)}</strong>
+        <span>{freshnessSummaryText(result)}</span>
       </div>
       <button
         aria-label={message('close')}
@@ -29,15 +32,11 @@ export function PageNotice({ result, onClose, onOpenEnglish }: PageNoticeProps) 
         onClick={onClose}
         type="button"
       >
-        <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
-          <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
-        </svg>
+        <X aria-hidden="true" size={18} strokeWidth={1.9} />
       </button>
       <button className="page-notice__action" onClick={onOpenEnglish} type="button">
         {message('openEnglish')}
-        <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 16 16" width="16">
-          <path d="m6 3 5 5-5 5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
-        </svg>
+        <ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
       </button>
     </aside>
   );

@@ -4,7 +4,8 @@ import { browser } from 'wxt/browser';
 import { PageNotice } from '../../components/PageNotice';
 import { DOCUMENT_MATCHES } from '../../lib/analyzers/sites';
 import { analyzePage } from '../../lib/analysis/analyzePage';
-import { OUTDATED_PREVIEW_RESULT } from '../../lib/analysis/preview';
+import { createPreviewResult } from '../../lib/analysis/preview';
+import type { WarningKind } from '../../lib/analysis/presentation';
 import type { AnalysisResult, ComparedResult } from '../../lib/analysis/types';
 import { isWarningResult } from '../../lib/analysis/types';
 import { sendRuntimeMessage } from '../../lib/messageClient';
@@ -67,8 +68,14 @@ export default defineContentScript({
             dismissedUrl = result.pageUrl;
             root?.render(null);
           }}
-          onOpenEnglish={() => void browser.tabs.create({ url: result.englishUrl })}
-          result={result as ComparedResult & { kind: 'behind' | 'outdated' }}
+          onOpenEnglish={() =>
+            void sendRuntimeMessage({
+              type: 'english:open',
+              url: result.englishUrl,
+              site: result.site,
+            })
+          }
+          result={result as ComparedResult & { kind: WarningKind }}
         />,
       );
     };
@@ -82,12 +89,10 @@ export default defineContentScript({
       };
       await publishResult(checking);
 
-      if (
-        import.meta.env.MODE === 'test' &&
-        new URLSearchParams(location.search).has('outdated-docs-preview')
-      ) {
+      const previewKind = new URLSearchParams(location.search).get('outdated-docs-preview');
+      if (import.meta.env.MODE === 'test' && previewKind !== null) {
         const previewResult: AnalysisResult = {
-          ...OUTDATED_PREVIEW_RESULT,
+          ...createPreviewResult(previewKind),
           pageUrl: location.href,
         };
         currentResult = previewResult;

@@ -56,6 +56,16 @@ function readDevsiteDate(document: Document): string | null {
   return null;
 }
 
+function forceEnglishLocale(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const url = new URL(value);
+  url.searchParams.set('hl', 'en');
+  return url.href;
+}
+
 export const GoogleDevsiteAdapter: SiteAdapter = {
   id: 'google-devsite',
 
@@ -70,7 +80,7 @@ export const GoogleDevsiteAdapter: SiteAdapter = {
     return {
       site: 'google-devsite',
       pageUrl: url.href,
-      englishUrl: isEnglish ? url.href : findEnglishUrl(document, url),
+      englishUrl: isEnglish ? url.href : forceEnglishLocale(findEnglishUrl(document, url)),
       locale,
       localizedAt: readDevsiteDate(document),
       isEnglish,
@@ -78,6 +88,9 @@ export const GoogleDevsiteAdapter: SiteAdapter = {
   },
 
   inspectEnglish(document, lastModified) {
+    if (!isEnglishLocale(getLocale(document))) {
+      return { englishAt: null };
+    }
     return { englishAt: readDevsiteDate(document) ?? toIsoDate(lastModified) };
   },
 };

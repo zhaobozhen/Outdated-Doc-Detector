@@ -1,9 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+  CircleCheck,
+  ExternalLink,
+  RefreshCw,
+  Settings as SettingsIcon,
+} from 'lucide-react';
 import { browser } from 'wxt/browser';
 
-import { DocumentClockIcon } from '../../components/DocumentClockIcon';
+import { FreshnessIcon } from '../../components/FreshnessIcon';
+import {
+  freshnessStatusText,
+  freshnessSummaryText,
+  lagDurationText,
+} from '../../lib/analysis/presentation';
 import type { AnalysisResult, ComparedResult } from '../../lib/analysis/types';
-import { OUTDATED_PREVIEW_RESULT } from '../../lib/analysis/preview';
+import { createPreviewResult } from '../../lib/analysis/preview';
 import { formatDate, message } from '../../lib/i18n';
 import type { MessageKey } from '../../lib/i18n';
 import { sendRuntimeMessage, sendTabMessage } from '../../lib/messageClient';
@@ -15,15 +26,24 @@ const initialResult: AnalysisResult = {
 };
 
 function isCompared(result: AnalysisResult): result is ComparedResult {
-  return result.kind === 'current' || result.kind === 'behind' || result.kind === 'outdated';
+  return (
+    result.kind === 'current' ||
+    result.kind === 'behind' ||
+    result.kind === 'outdated' ||
+    result.kind === 'stale'
+  );
 }
 
 function statusText(result: AnalysisResult): string {
+  if (isCompared(result)) {
+    return freshnessStatusText(result.kind);
+  }
   const keys: Record<AnalysisResult['kind'], MessageKey> = {
     checking: 'statusChecking',
     current: 'statusCurrent',
     behind: 'statusBehind',
     outdated: 'statusOutdated',
+    stale: 'statusStale',
     unknown: 'statusUnknown',
     error: 'statusUnknown',
     english: 'statusEnglish',
@@ -33,15 +53,11 @@ function statusText(result: AnalysisResult): string {
 }
 
 function summaryText(result: AnalysisResult): string {
-  if (result.kind === 'behind' || result.kind === 'outdated') {
-    if (result.lagDays === 0) {
-      return message('lagUnderDaySummary');
-    }
-    return message('lagSummary', String(result.lagDays));
+  if (isCompared(result)) {
+    return freshnessSummaryText(result);
   }
   const keys: Partial<Record<AnalysisResult['kind'], MessageKey>> = {
     checking: 'checkingSummary',
-    current: 'currentSummary',
     unknown: 'unknownSummary',
     error: 'networkSummary',
     english: 'englishSummary',
@@ -50,52 +66,14 @@ function summaryText(result: AnalysisResult): string {
   return message(keys[result.kind] ?? 'unknownSummary');
 }
 
-function SettingsIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="20" viewBox="0 0 24 24" width="20">
-      <path
-        d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-.13-1.1 2-1.55-2-3.46-2.47 1a8.8 8.8 0 0 0-1.9-1.1L15.12 3h-4l-.4 2.8c-.67.27-1.3.64-1.88 1.08L6.32 5.9l-2 3.46 2.05 1.57A8.4 8.4 0 0 0 6.25 12c0 .37.03.73.1 1.08l-2.03 1.57 2 3.46 2.52-1c.58.45 1.2.81 1.88 1.08l.4 2.81h4l.4-2.8a8.8 8.8 0 0 0 1.88-1.1l2.48 1.01 2-3.46-2-1.55c.08-.36.12-.73.12-1.1Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="1.6"
-      />
-    </svg>
-  );
-}
-
-function OpenIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
-      <path d="M11 4h5v5M16 4l-7 7" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-      <path d="M9 5H5.5A1.5 1.5 0 0 0 4 6.5v8A1.5 1.5 0 0 0 5.5 16h8a1.5 1.5 0 0 0 1.5-1.5V11" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-function RefreshIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="18" viewBox="0 0 20 20" width="18">
-      <path d="M16 7V3m0 0h-4m4 0-2.2 2.2A6 6 0 1 0 16 11" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg aria-hidden="true" fill="none" height="15" viewBox="0 0 16 16" width="15">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" />
-      <path d="m5 8 2 2 4-4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" />
-    </svg>
-  );
-}
-
 export default function App() {
   const [result, setResult] = useState<AnalysisResult>(initialResult);
   const [tabId, setTabId] = useState<number | null>(null);
 
   const detect = useCallback(async () => {
-    if (import.meta.env.MODE === 'test' && new URLSearchParams(location.search).has('preview')) {
-      setResult(OUTDATED_PREVIEW_RESULT);
+    const previewKind = new URLSearchParams(location.search).get('preview');
+    if (import.meta.env.MODE === 'test' && previewKind !== null) {
+      setResult(createPreviewResult(previewKind));
       return;
     }
 
@@ -159,7 +137,7 @@ export default function App() {
     <main className="popup-shell" data-state={result.kind}>
       <header className="popup-header">
         <div className="brand">
-          <DocumentClockIcon size={28} />
+          <FreshnessIcon size={28} strokeWidth={1.8} />
           <span>Outdated Docs</span>
         </div>
         <button
@@ -168,14 +146,14 @@ export default function App() {
           onClick={() => void browser.runtime.openOptionsPage()}
           type="button"
         >
-          <SettingsIcon />
+          <SettingsIcon aria-hidden="true" size={20} strokeWidth={1.8} />
           <span>{message('settings')}</span>
         </button>
       </header>
 
       <section aria-live="polite" className="status-block">
         <div className="status-icon">
-          <DocumentClockIcon size={58} state={visualState} />
+          <FreshnessIcon size={52} state={visualState} strokeWidth={1.8} />
         </div>
         <div>
           <h1>{statusText(result)}</h1>
@@ -190,9 +168,7 @@ export default function App() {
             <strong>{formatDate(result.localizedAt)}</strong>
           </div>
           <div className="lag-marker">
-            {result.lagDays === 0
-              ? message('underOneDay')
-              : `${result.lagDays} ${message('daysUnit')}`}
+            {lagDurationText(result.lagDays)}
           </div>
           <div className="date-column date-column--end">
             <span>{message('englishOriginal')}</span>
@@ -205,7 +181,7 @@ export default function App() {
       <div className="actions">
         {'englishUrl' in result && result.englishUrl && result.kind !== 'english' && (
           <button className="button button--primary" onClick={() => void openEnglish()} type="button">
-            <OpenIcon />
+            <ExternalLink aria-hidden="true" size={18} strokeWidth={1.9} />
             {message('openEnglish')}
           </button>
         )}
@@ -215,7 +191,7 @@ export default function App() {
           onClick={() => void retry()}
           type="button"
         >
-          <RefreshIcon />
+          <RefreshCw aria-hidden="true" size={18} strokeWidth={1.9} />
           {message('retry')}
         </button>
       </div>
@@ -223,7 +199,7 @@ export default function App() {
       {hostname && (
         <footer>
           <span>{hostname}</span>
-          {isCompared(result) && <span className="verified"><CheckIcon /> {message('verified')}</span>}
+          {isCompared(result) && <span className="verified"><CircleCheck aria-hidden="true" size={15} strokeWidth={1.8} /> {message('verified')}</span>}
         </footer>
       )}
     </main>

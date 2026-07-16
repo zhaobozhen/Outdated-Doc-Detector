@@ -3,13 +3,16 @@ import { browser } from 'wxt/browser';
 import { findAdapterById } from '../lib/analyzers';
 import type { SiteId } from '../lib/analyzers/sites';
 import { isResultForPage } from '../lib/analysis/cache';
+import { isFreshnessKind, type FreshnessKind } from '../lib/analysis/classify';
+import { freshnessStatusKey } from '../lib/analysis/presentation';
 import type { AnalysisResult } from '../lib/analysis/types';
+import { fetchEnglishPage } from '../lib/fetchEnglishPage';
 import { message } from '../lib/i18n';
 import { isExtensionMessage } from '../lib/messages';
 
 const resultKey = (tabId: number): string => `analysis:${tabId}`;
 
-function iconPaths(state: 'default' | 'current' | 'behind' | 'outdated'): Record<number, string> {
+function iconPaths(state: 'default' | FreshnessKind): Record<number, string> {
   const prefix = state === 'default' ? 'icon' : `icon-${state}`;
   return {
     16: `/icons/${prefix}-16.png`,
@@ -18,20 +21,12 @@ function iconPaths(state: 'default' | 'current' | 'behind' | 'outdated'): Record
 }
 
 async function updateAction(tabId: number, result: AnalysisResult): Promise<void> {
-  const state =
-    result.kind === 'current' || result.kind === 'behind' || result.kind === 'outdated'
-      ? result.kind
-      : 'default';
-  const titleKey =
-    result.kind === 'current'
-      ? 'statusCurrent'
-      : result.kind === 'behind'
-        ? 'statusBehind'
-        : result.kind === 'outdated'
-          ? 'statusOutdated'
-          : result.kind === 'checking'
-            ? 'statusChecking'
-            : 'statusUnknown';
+  const state = isFreshnessKind(result.kind) ? result.kind : 'default';
+  const titleKey = isFreshnessKind(result.kind)
+    ? freshnessStatusKey(result.kind)
+    : result.kind === 'checking'
+      ? 'statusChecking'
+      : 'statusUnknown';
 
   await Promise.all([
     browser.action.setIcon({ tabId, path: iconPaths(state) }),
@@ -75,31 +70,16 @@ async function getResult(tabId: number, pageUrl: string): Promise<AnalysisResult
   return analysisResult;
 }
 
-async function fetchEnglishPage(value: string, site: SiteId) {
+async function openEnglishPage(value: string, site: SiteId): Promise<void> {
   const url = new URL(value);
   const adapter = findAdapterById(site);
   if (url.protocol !== 'https:' || !adapter?.canHandle(url)) {
-    throw new Error('Refusing a document request outside configured hosts.');
+    throw new Error('Refusing to open a document outside configured hosts.');
   }
-
-  const response = await fetch(url, {
-    credentials: 'omit',
-    redirect: 'follow',
-    headers: { Accept: 'text/html,application/xhtml+xml' },
-  });
-  if (!response.ok) {
-    throw new Error(`Document request failed with ${response.status}.`);
+  if (site === 'google-devsite') {
+    url.searchParams.set('hl', 'en');
   }
-  const finalUrl = new URL(response.url);
-  if (finalUrl.protocol !== 'https:' || !adapter.canHandle(finalUrl)) {
-    throw new Error('Document request redirected outside configured hosts.');
-  }
-
-  return {
-    html: await response.text(),
-    lastModified: response.headers.get('last-modified'),
-    url: finalUrl.href,
-  };
+  await browser.tabs.create({ url: url.href });
 }
 
 export default defineBackground(() => {
@@ -124,6 +104,9 @@ export default defineBackground(() => {
     }
     if (rawMessage.type === 'analysis:get') {
       return getResult(rawMessage.tabId, rawMessage.pageUrl);
+    }
+    if (rawMessage.type === 'english:open') {
+      return openEnglishPage(rawMessage.url, rawMessage.site);
     }
 
     return undefined;

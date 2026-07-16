@@ -21,6 +21,7 @@
     "test:e2e:update": "npm run build:e2e && playwright test --update-snapshots=all"
   },
   "dependencies": {
+    "lucide-react": "1.24.0",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
@@ -32,6 +33,7 @@
     "@vitejs/plugin-react": "4.7.0",
     "@wxt-dev/module-react": "1.2.2",
     "jsdom": "29.1.1",
+    "lucide-static": "1.24.0",
     "oxlint": "1.74.0",
     "typescript": "7.0.2",
     "vite": "6.4.3",

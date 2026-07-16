@@ -6,7 +6,7 @@ timestamp lag without claiming that the page content is necessarily different.
 
 Outdated Docs 是一款默认支持中英双语的 Chrome 扩展。它对比开发者文档译文与英文原版的更新时间，只报告时间差，不推断内容或翻译质量。
 
-![Clearly outdated Popup state](e2e/extension.spec.ts-snapshots/popup-outdated-darwin.png)
+![Severely outdated Popup state](e2e/extension.spec.ts-snapshots/popup-outdated-darwin.png)
 
 ## Product Shape
 
@@ -45,8 +45,9 @@ produces an outdated warning from unreliable input.
 | Comparison | Result |
 | --- | --- |
 | Translation is no more than 30 minutes behind | Up to date |
-| Translation is over 30 minutes but under 45 days behind | Slightly behind |
-| Translation is at least 45 days behind | Clearly outdated |
+| Translation is over 30 minutes but under 7 days behind | Slightly behind |
+| Translation is at least 7 days but under 45 days behind | Noticeably behind |
+| Translation is at least 45 days behind | Severely outdated |
 | Translation is newer than the English original | Up to date |
 | Date, English link, or network response is unreliable | Unable to determine |
 
@@ -72,10 +73,11 @@ Options
   -> showPageNotice
 ```
 
-The service worker validates the requested URL and final redirected URL against
-the originating adapter family before returning HTML and `Last-Modified`.
-Requests omit credentials. The content script remains responsible for parsing
-both documents, so site-specific selectors stay inside the adapter layer.
+The service worker validates the requested URL against the originating adapter
+family before returning HTML and `Last-Modified`. Requests include site cookies
+but reject redirects so credentials cannot move to another origin. The content
+script remains responsible for parsing both documents, so site-specific
+selectors stay inside the adapter layer.
 
 The only synchronized setting is `showPageNotice`, which defaults to `true`.
 Per-tab results use `chrome.storage.session`, are bound to the exact document
@@ -171,7 +173,7 @@ lib/
   analyzers/                Site registry, adapters, and DOM parsers
   analysis/                 Result model, comparison rules, and cache guard
   storage/                  Synced settings access
-components/                 Shared icons, notice UI, and CSS tokens
+components/                 Shared Lucide icon mapping, notice UI, and CSS tokens
 public/_locales/             Chrome i18n catalogs
 public/icons/                Toolbar and store icon assets
 tests/fixtures/              Stable documentation DOM fixtures
