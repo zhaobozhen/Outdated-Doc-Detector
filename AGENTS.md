@@ -168,8 +168,9 @@ surface changes.
 - Visual changes require inspecting both the accepted concept under
   `docs/design/` and the latest implementation screenshot in the same QA pass.
 - Use `.github/workflows/update-visual-baselines.yml` after intentionally
-  accepting a visual change. Download and inspect its macOS 26 artifact before
-  replacing the tracked snapshots, then run normal `npm run test:e2e`.
+  accepting a visual change. It regenerates candidates and verifies them with a
+  normal E2E pass before upload. Inspect its macOS 26 artifact before replacing
+  tracked snapshots, then require the normal CI workflow to pass after commit.
 - `npm run test:e2e:update` is suitable for local preview, but locally generated
   Darwin snapshots are not canonical when the host OS differs from the CI image.
 - Browser GUI validation must launch the entire Playwright/WXT parent process
