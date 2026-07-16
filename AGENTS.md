@@ -179,9 +179,11 @@ surface changes.
 
 - Keep exact dependency versions and the npm lockfile unless the task explicitly
   calls for an upgrade.
-- Direct `vite@6.4.3` and `vite-node@3.2.4` pins preserve the documented Node.js
-  20.12 minimum. Do not let WXT resolve a Node 20.19-only Vite toolchain without
-  updating and proving the project requirement.
+- Node.js 26.5.0 is the documented and CI-validated minimum. Keep both workflow
+  pins, `package.json`, the lockfile root package, and README requirements
+  aligned when changing it.
+- Direct `vite@6.4.3` and `vite-node@3.2.4` pins are intentional. Do not change
+  the build toolchain without updating and proving the project requirement.
 - `.wxt/`, `.output/`, `test-results/`, `playwright-report/`, caches, and local
   logs are generated and must not be committed.
 - Visual snapshots, stable DOM fixtures, locale catalogs, icons, and design

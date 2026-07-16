@@ -119,7 +119,7 @@ URL, and are cleared on navigation or when the tab closes.
 
 Requirements:
 
-- Node.js 20.12 or newer
+- Node.js 26.5.0 or newer
 - npm and the committed lockfile
 - Chrome or Playwright Chromium for extension testing
 
