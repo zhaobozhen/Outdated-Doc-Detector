@@ -3,12 +3,12 @@
 .outdated-docs-host {
   color: var(--od-text);
   font-family: var(--od-font);
-  left: 50%;
+  inset-inline: 0;
+  margin-inline: auto;
   max-width: calc(100vw - 24px);
   pointer-events: none;
   position: fixed;
   top: max(80px, calc(env(safe-area-inset-top) + 12px));
-  transform: translateX(-50%);
   width: 760px;
   z-index: 2147483647;
 }
@@ -237,6 +237,7 @@
   display: grid;
   grid-column: 1 / -1;
   grid-template-rows: 0fr;
+  min-width: 0;
   opacity: 0;
   transform: translateY(-6px);
   transition:
@@ -256,7 +257,9 @@
 }
 
 .page-notice__diff-clip {
+  max-width: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
